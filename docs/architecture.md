@@ -150,7 +150,8 @@ What happens when a QA engineer runs `pesto run --env staging`:
    already wired with a `Client` pointed at the selected environment. It builds
    requests, sends them, and asserts on the responses.
 5. **Collect results.** The CLI captures pass/fail/timing and writes reports
-   (JUnit XML for CI, plus human-readable formats) to `reports/`.
+   (JUnit XML for CI - the CI-standard report schema, not the JUnit tool - plus
+   human-readable formats) to `reports/`.
 
 ## How config reaches a test
 

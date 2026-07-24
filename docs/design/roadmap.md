@@ -34,7 +34,7 @@ The smallest thing that lets someone write a Pesto test by hand, no CLI yet.
       `*testing.T` wrappers via `go test -overlay` + AST rewrite
       (see [design-test-context.md](active/design-test-context.md))
 - [x] `pesto run --env <e>` - resolve config, transform, drive `go test`, exit codes
-- [ ] JUnit XML report output
+- [ ] JUnit XML report output (the CI-standard XML schema, not the JUnit tool)
 
 **Done when:** `pesto init` + a `*pesto.T` test + `pesto run` works end to end on a
 fresh project.

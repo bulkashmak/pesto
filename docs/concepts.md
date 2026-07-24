@@ -197,5 +197,7 @@ The full command surface is being designed in
 ## Reports
 
 After a run, Pesto writes results to `reports/`: JUnit XML for CI integration plus
-human-readable output. Reporting formats are tracked in the
+human-readable output. ("JUnit XML" is the CI-standard test-report schema that
+Jenkins, GitLab, GitHub Actions, and others ingest - it's the format, not the
+JUnit tool; Pesto does not use JUnit.) Reporting formats are tracked in the
 [roadmap](design/roadmap.md)
