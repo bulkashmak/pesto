@@ -14,17 +14,20 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/bulkashmak/pesto/internal/report"
 	"github.com/bulkashmak/pesto/internal/transform"
 )
 
 // Options configures a run.
 type Options struct {
-	Root   string    // project root (module directory)
-	Env    string    // environment name; empty means none selected
-	Args   []string  // extra arguments passed through to `go test`
-	Stdout io.Writer // where go test stdout goes
-	Stderr io.Writer // where go test stderr goes
-	Keep   bool      // keep the temp overlay dir instead of deleting it
+	Root       string    // project root (module directory)
+	Env        string    // environment name; empty means none selected
+	Args       []string  // extra arguments passed through to `go test`
+	Stdout     io.Writer // where go test stdout goes
+	Stderr     io.Writer // where go test stderr goes
+	Keep       bool      // keep the temp overlay dir instead of deleting it
+	Report     string    // report format: "" (none) or "junit"
+	ReportPath string    // report output path (default: <root>/reports/junit.xml)
 }
 
 // Run transforms the project's Pesto tests and executes `go test`. It returns the
@@ -51,14 +54,22 @@ func Run(opts Options) (exitCode int, err error) {
 		return 1, err
 	}
 
-	args := append([]string{"test", "-overlay", overlayPath}, opts.Args...)
+	if opts.Report != "" && opts.Report != "junit" {
+		return 1, fmt.Errorf("unknown report format %q (supported: junit)", opts.Report)
+	}
+
+	args := []string{"test"}
+	if opts.Report != "" {
+		args = append(args, "-json")
+	}
+	args = append(args, "-overlay", overlayPath)
+	args = append(args, opts.Args...)
 	if !hasPackageArg(opts.Args) {
 		args = append(args, "./...")
 	}
 
 	cmd := exec.Command("go", args...)
 	cmd.Dir = root
-	cmd.Stdout = opts.Stdout
 	cmd.Stderr = opts.Stderr
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "PESTO_ROOT="+root)
@@ -66,14 +77,62 @@ func Run(opts Options) (exitCode int, err error) {
 		cmd.Env = append(cmd.Env, "PESTO_ENV="+opts.Env)
 	}
 
-	if err := cmd.Run(); err != nil {
-		var exit *exec.ExitError
-		if errors.As(err, &exit) {
-			return exit.ExitCode(), nil
-		}
-		return 1, fmt.Errorf("run go test: %w", err)
+	if opts.Report == "" {
+		cmd.Stdout = opts.Stdout
+		return waitCode(cmd.Run())
 	}
-	return 0, nil
+	return runWithReport(cmd, root, opts)
+}
+
+// runWithReport streams `go test -json`, reproduces normal console output, and
+// writes a JUnit XML report.
+func runWithReport(cmd *exec.Cmd, root string, opts Options) (int, error) {
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return 1, err
+	}
+	if err := cmd.Start(); err != nil {
+		return 1, err
+	}
+
+	rep, parseErr := report.FromGoTestJSON(stdout, opts.Stdout)
+	exitCode, waitErr := waitCode(cmd.Wait())
+	if waitErr != nil {
+		return exitCode, waitErr
+	}
+	if parseErr != nil {
+		return exitCode, fmt.Errorf("parse test output: %w", parseErr)
+	}
+
+	path := opts.ReportPath
+	if path == "" {
+		path = filepath.Join(root, "reports", "junit.xml")
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return exitCode, err
+	}
+	xmlBytes, err := rep.XML()
+	if err != nil {
+		return exitCode, err
+	}
+	if err := os.WriteFile(path, xmlBytes, 0o644); err != nil {
+		return exitCode, err
+	}
+	fmt.Fprintf(opts.Stdout, "\npesto: wrote JUnit report to %s\n", path)
+	return exitCode, nil
+}
+
+// waitCode converts a cmd error into a `go test` exit code. A non-zero exit
+// (failing tests) is reported as a code, not an error.
+func waitCode(err error) (int, error) {
+	if err == nil {
+		return 0, nil
+	}
+	var exit *exec.ExitError
+	if errors.As(err, &exit) {
+		return exit.ExitCode(), nil
+	}
+	return 1, fmt.Errorf("run go test: %w", err)
 }
 
 // overlayEntry maps a compiler-visible path to the temp file that replaces it.

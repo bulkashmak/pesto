@@ -45,7 +45,7 @@ func usage() {
 
 Usage:
   pesto init <name> [--module <path>]
-  pesto run [--env <name>] [--root <dir>] [go test args...]
+  pesto run [--env <name>] [--root <dir>] [--report junit] [--out <path>] [go test args...]
   pesto version
 
 Commands:
@@ -108,33 +108,35 @@ Next steps:
 }
 
 func cmdRun(args []string) int {
-	env, root, keep, passthrough, err := parseRunArgs(args)
+	cfg, err := parseRunArgs(args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "pesto: %v\n", err)
 		return 2
 	}
 
 	// Resolve the environment name: explicit flag, else pesto.yaml's default_env.
-	if env == "" {
-		if cfg, cfgErr := pesto.LoadConfig(root); cfgErr == nil {
-			env = cfg.DefaultEnv
+	if cfg.env == "" {
+		if pc, cfgErr := pesto.LoadConfig(cfg.root); cfgErr == nil {
+			cfg.env = pc.DefaultEnv
 		}
 	}
 	// Fail fast if a named environment cannot be resolved.
-	if env != "" {
-		if _, envErr := pesto.LoadEnvironment(root, env); envErr != nil {
+	if cfg.env != "" {
+		if _, envErr := pesto.LoadEnvironment(cfg.root, cfg.env); envErr != nil {
 			fmt.Fprintf(os.Stderr, "pesto: %v\n", envErr)
 			return 1
 		}
 	}
 
 	code, err := runner.Run(runner.Options{
-		Root:   root,
-		Env:    env,
-		Args:   passthrough,
-		Stdout: os.Stdout,
-		Stderr: os.Stderr,
-		Keep:   keep,
+		Root:       cfg.root,
+		Env:        cfg.env,
+		Args:       cfg.passthrough,
+		Stdout:     os.Stdout,
+		Stderr:     os.Stderr,
+		Keep:       cfg.keep,
+		Report:     cfg.report,
+		ReportPath: cfg.out,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "pesto: %v\n", err)
@@ -143,15 +145,25 @@ func cmdRun(args []string) int {
 	return code
 }
 
-// parseRunArgs pulls pesto's own flags (--env, --root, --keep) out of args and
-// passes everything else through to `go test`, so `pesto run --env dev -run X -v`
-// works. Both `--flag value` and `--flag=value` forms are accepted.
-func parseRunArgs(args []string) (env, root string, keep bool, passthrough []string, err error) {
-	root = "."
+// runConfig holds pesto's own `run` flags, separated from go test passthrough.
+type runConfig struct {
+	env, root, report, out string
+	keep                   bool
+	passthrough            []string
+}
+
+// parseRunArgs pulls pesto's own flags out of args and passes everything else
+// through to `go test`, so `pesto run --env dev --report junit -run X -v` works.
+// Both `--flag value` and `--flag=value` forms are accepted.
+func parseRunArgs(args []string) (runConfig, error) {
+	cfg := runConfig{root: "."}
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
-		name := strings.TrimLeft(arg, "-")
-		key, inlineVal, hasInline := strings.Cut(name, "=")
+		if !strings.HasPrefix(arg, "-") {
+			cfg.passthrough = append(cfg.passthrough, arg)
+			continue
+		}
+		key, inlineVal, hasInline := strings.Cut(strings.TrimLeft(arg, "-"), "=")
 
 		takeValue := func() (string, error) {
 			if hasInline {
@@ -164,20 +176,24 @@ func parseRunArgs(args []string) (env, root string, keep bool, passthrough []str
 			return args[i], nil
 		}
 
-		switch {
-		case strings.HasPrefix(arg, "-") && key == "env":
-			if env, err = takeValue(); err != nil {
-				return
-			}
-		case strings.HasPrefix(arg, "-") && key == "root":
-			if root, err = takeValue(); err != nil {
-				return
-			}
-		case strings.HasPrefix(arg, "-") && key == "keep":
-			keep = true
+		var err error
+		switch key {
+		case "env":
+			cfg.env, err = takeValue()
+		case "root":
+			cfg.root, err = takeValue()
+		case "report":
+			cfg.report, err = takeValue()
+		case "out":
+			cfg.out, err = takeValue()
+		case "keep":
+			cfg.keep = true
 		default:
-			passthrough = append(passthrough, arg)
+			cfg.passthrough = append(cfg.passthrough, arg)
+		}
+		if err != nil {
+			return cfg, err
 		}
 	}
-	return env, root, keep, passthrough, nil
+	return cfg, nil
 }
