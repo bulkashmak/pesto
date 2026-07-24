@@ -23,14 +23,32 @@ pesto version
 ### `pesto init`
 
 Creates the full project layout (see [../architecture.md](../../architecture.md)):
-`pesto.yaml`, `environments/`, `clients/`, `tests/`, `fixtures/`, `helpers/`,
-`reports/`, `go.mod`.
+`pesto.yaml`, `environments/{dev,test}.yaml`, `clients/`, `tests/e2e/example/`,
+`fixtures/`, `helpers/`, `reports/`, `go.mod`, `.gitignore`, `README.md`.
 
-Open questions:
+Decided (implemented in Phase 2):
 
-- Does it run `go mod init` / `go get` for the user, or just write files?
-- Interactive prompts (base URL, first environment) vs. flags vs. pure defaults?
-- Should it create a runnable example test so `pesto run` works immediately?
+- **Writes files only; does not run `go mod init` / `go get`.** It emits a `go.mod`
+  requiring the runtime, and the printed next-steps tell the user to run
+  `go get github.com/bulkashmak/pesto@latest`. Rationale: keep init offline and
+  side-effect-free; module resolution is the user's `go get`. It refuses to
+  overwrite existing files.
+- **Pure defaults + a `--module` flag** (default module path = the project dir
+  name). No interactive prompts - `init` is one non-interactive step.
+- **Yes, it creates a runnable example test.** `tests/e2e/example/example_test.go`
+  is a real `*pesto.T` test (`GET /todos/1`) against a public sandbox API
+  (`jsonplaceholder.typicode.com`) set as the default `base_url`, so
+  `pesto init && pesto run` passes immediately **when online**. It teaches the real
+  config-driven pattern rather than a self-contained stub.
+
+Still open:
+
+- **go.mod pesto version.** Today init pins `v0.0.0` and leans on the user's
+  `go get`; once the CLI has release tags it should inject its own version so the
+  require resolves without a manual `go get`.
+- **Offline first run.** The example needs network on first `pesto run`. Acceptable
+  for an API-testing tool, but an offline/self-contained example mode could be an
+  option later.
 
 ### `pesto generate ...`
 

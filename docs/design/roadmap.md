@@ -29,7 +29,7 @@ The smallest thing that lets someone write a Pesto test by hand, no CLI yet.
 
 ## Phase 2 - CLI: structure & the transform
 
-- [ ] `pesto init <name>` - scaffold the full project layout
+- [x] `pesto init <name>` - scaffold the full project layout (runnable example)
 - [x] **Transform step** - rewrite `func TestX(t *pesto.T)` into standard
       `*testing.T` wrappers via `go test -overlay` + AST rewrite
       (see [design-test-context.md](active/design-test-context.md))

@@ -5,10 +5,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/bulkashmak/pesto"
 	"github.com/bulkashmak/pesto/internal/runner"
+	"github.com/bulkashmak/pesto/internal/scaffold"
 )
 
 const version = "0.0.0-dev"
@@ -22,9 +24,11 @@ func main() {
 	switch os.Args[1] {
 	case "run":
 		os.Exit(cmdRun(os.Args[2:]))
+	case "init":
+		os.Exit(cmdInit(os.Args[2:]))
 	case "version":
 		fmt.Printf("pesto %s\n", version)
-	case "init", "generate":
+	case "generate":
 		fmt.Fprintf(os.Stderr, "pesto %s: not implemented yet\n", os.Args[1])
 		os.Exit(1)
 	case "-h", "--help", "help":
@@ -40,13 +44,67 @@ func usage() {
 	fmt.Fprint(os.Stderr, `pesto - black-box backend test automation
 
 Usage:
+  pesto init <name> [--module <path>]
   pesto run [--env <name>] [--root <dir>] [go test args...]
   pesto version
 
 Commands:
+  init       scaffold a new test project
   run        transform *pesto.T tests and drive `+"`go test`"+`
   version    print the pesto version
 `)
+}
+
+// cmdInit scaffolds a new project directory.
+func cmdInit(args []string) int {
+	var name, module string
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch {
+		case arg == "--module" || arg == "-module":
+			if i+1 >= len(args) {
+				fmt.Fprintln(os.Stderr, "pesto: --module needs a value")
+				return 2
+			}
+			i++
+			module = args[i]
+		case strings.HasPrefix(arg, "--module="):
+			module = strings.TrimPrefix(arg, "--module=")
+		case strings.HasPrefix(arg, "-"):
+			fmt.Fprintf(os.Stderr, "pesto: unknown flag %q\n", arg)
+			return 2
+		default:
+			if name != "" {
+				fmt.Fprintf(os.Stderr, "pesto: unexpected argument %q\n", arg)
+				return 2
+			}
+			name = arg
+		}
+	}
+
+	if name == "" {
+		fmt.Fprintln(os.Stderr, "pesto: init needs a project name\n\nUsage: pesto init <name> [--module <path>]")
+		return 2
+	}
+	if module == "" {
+		module = filepath.Base(name)
+	}
+
+	// TODO: inject the CLI's released version once tags exist; v0.0.0 relies on the
+	// user running `go get github.com/bulkashmak/pesto@latest` (or a replace).
+	if err := scaffold.Create(scaffold.Options{Dir: name, Module: module, PestoVersion: "v0.0.0"}); err != nil {
+		fmt.Fprintf(os.Stderr, "pesto: %v\n", err)
+		return 1
+	}
+
+	fmt.Printf(`Created Pesto project in %s/
+
+Next steps:
+  cd %s
+  go get %s@latest   # resolve the pesto runtime dependency
+  pesto run
+`, name, name, scaffold.RuntimeImportPath())
+	return 0
 }
 
 func cmdRun(args []string) int {

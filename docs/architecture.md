@@ -108,8 +108,8 @@ root runtime library. Empty directories are not created ahead of need.
 acme-api-tests/
 ├── pesto.yaml              # project config: default env, conventions
 ├── go.mod
-├── envs/
-│   ├── dev.yaml            # base URL, auth, variables for staging
+├── environments/
+│   ├── dev.yaml            # base URL, auth, variables per environment
 │   └── test.yaml
 ├── clients/                # typed API clients (hand-written or generated)
 │   └── users.go
