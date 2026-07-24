@@ -94,9 +94,13 @@ func (r *Request) Send() *Response {
 		r.t.Fatalf("pesto: build %s %s: %v", r.method, r.path, r.err)
 	}
 
-	fullURL, err := url.JoinPath(r.client.baseURL, r.path)
-	if err != nil {
-		r.t.Fatalf("pesto: resolve URL for %s %s: %v", r.method, r.path, err)
+	fullURL := r.path
+	if r.client.baseURL != "" {
+		joined, err := url.JoinPath(r.client.baseURL, r.path)
+		if err != nil {
+			r.t.Fatalf("pesto: resolve URL for %s %s: %v", r.method, r.path, err)
+		}
+		fullURL = joined
 	}
 
 	var body io.Reader

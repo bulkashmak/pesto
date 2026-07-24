@@ -30,9 +30,10 @@ The smallest thing that lets someone write a Pesto test by hand, no CLI yet.
 ## Phase 2 - CLI: structure & the transform
 
 - [ ] `pesto init <name>` - scaffold the full project layout
-- [ ] **Transform step** - rewrite `func TestX(t *pesto.T)` into standard
-      `*testing.T` wrappers (see [design-test-context.md](active/design-test-context.md))
-- [ ] `pesto run --env <e>` - resolve config, transform, drive `go test`, exit codes
+- [x] **Transform step** - rewrite `func TestX(t *pesto.T)` into standard
+      `*testing.T` wrappers via `go test -overlay` + AST rewrite
+      (see [design-test-context.md](active/design-test-context.md))
+- [x] `pesto run --env <e>` - resolve config, transform, drive `go test`, exit codes
 - [ ] JUnit XML report output
 
 **Done when:** `pesto init` + a `*pesto.T` test + `pesto run` works end to end on a

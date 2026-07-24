@@ -4,7 +4,8 @@
 - **Owner:** bulat
 - **Promoted to:** —
 
-> Direction: authoring model decided; mechanism open.
+> Direction: authoring model decided; **mechanism decided** (overlay + AST rewrite,
+> see below).
 
 ## Decision
 
@@ -55,21 +56,43 @@ plain `go test` working. We chose the transform instead because:
 Trade-off accepted: **no bare `go test`**, and we take on a transform step that
 must stay fast and debuggable.
 
-## Open questions (the mechanism)
+## Mechanism (decided): overlay + AST rewrite
 
-- **AST rewrite vs. build tags.** Rewrite the source AST in a build dir, or keep
-  authored files behind a build tag and emit a tagged companion file with the
-  wrappers? Which keeps line numbers / stack traces pointing at the authored file?
-- **Where do generated files live?** Temp dir (clean, but harder to inspect) vs.
-  `*_gen_test.go` on disk (inspectable, but clutters the repo / needs gitignore).
-- **`go vet` noise.** A `func TestX(t *pesto.T)` in source triggers vet's
-  "wrong signature for Test" warning. Rename authored funcs during transform, hide
-  them behind a build tag, or suppress vet?
-- **Stack traces & editor "run test".** How do failures map back to the authored
-  line? Does the IDE gutter "run test" affordance still work, or only `pesto run`?
-- **`pesto.New(t)` escape hatch.** Keep a public `pesto.New(t *testing.T) *pesto.T`
-  so the runtime is usable from a plain `*testing.T` test (useful for dogfooding in
-  Phase 1, before the transform exists, and as a manual escape hatch)?
+`pesto run` never edits files in the repo. It rewrites each `_test.go` in memory
+and passes the rewritten versions to the compiler via `go test -overlay`.
+
+For each package with authored tests, the transform produces two overlay entries:
+
+1. **The authored file, rewritten in place.** Each `func TestX(t *pesto.T)` is
+   renamed to an unexported body function (`func pestoBody_TestX(t *pesto.T)`) by a
+   precise, byte-level edit at the function-name token, so **every other byte and
+   line break is preserved**. A `//line <authored-path>:1` directive is prepended so
+   compiler diagnostics and panics still point at the authored source.
+2. **A generated wrappers file** added to the same package (a path that does not
+   exist on disk, supplied entirely by the overlay). It imports `testing` + `pesto`
+   and declares the real `func TestX(t *testing.T) { pesto.Run(t, pestoBody_TestX) }`
+   for each test. Keeping wrappers in their own generated file means imports are
+   clean and the authored file only ever gets the minimal rename.
+
+This resolves the earlier open questions:
+
+- **AST rewrite vs. build tags → AST rewrite via overlay.** No build-tag juggling,
+  no duplicate-symbol clash (the authored `TestX` is renamed), authored files
+  untouched on disk.
+- **Where generated files live → nowhere on disk.** They exist only in a temp dir
+  referenced by the overlay, so there is nothing to gitignore. A `--keep`/debug flag
+  can dump them for inspection.
+- **`go vet` noise → gone.** The compiler sees valid `func TestX(t *testing.T)`
+  wrappers; `pesto run` controls the `go test` invocation (and can scope vet).
+- **Stack traces → authored source**, via the `//line` directives.
+- **Editor "run test" → only `pesto run`.** An IDE will not recognize
+  `func TestX(t *pesto.T)` as a test; this is the accepted cost of the clean
+  signature. `pesto run --filter` covers running a subset.
+
+**`pesto.New(t)` stays public** as the escape hatch: the runtime is usable from a
+plain `func TestX(t *testing.T)` without the transform (this is how Phase 1 is
+tested today), and `pesto.Run(t, body)` is the entry point the generated wrappers
+call.
 
 ## Related
 
