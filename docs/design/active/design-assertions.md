@@ -10,6 +10,11 @@ They can always decode the response into a model and assert with the standard
 library (or testify, gotest.tools, go-cmp, ...). Pesto's assertions are a
 convenience, not a lock-in. This is the load-bearing principle of the note.
 
+> **Implemented (Phase 1):** the fluent `Expect()` (status, header, JSON-path) and
+> the `Decode` escape hatch are built. Soft assertions are the default. The open
+> questions below (soft/hard toggle, JSON path syntax, schema assertions, matchers,
+> `Eventually`) are not yet implemented.
+
 ## Goals
 
 - **Not a walled garden.** The fluent API is for convenience, never a requirement.

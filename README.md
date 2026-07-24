@@ -20,14 +20,17 @@ Pesto takes the parts that work elsewhere and combines them:
 ## What it looks like
 
 ```bash
+# Install the CLI
+go install github.com/bulkashmak/pesto/cmd/pesto@latest
+
 # Scaffold a new test project (opinionated structure, ready to run)
 pesto init acme-api-tests
 
-# Generate a test for an endpoint
-pesto generate test users/create
+# Run the suite against an environment, with a CI report
+pesto run --env staging --report junit
 
-# Run the whole suite against staging, in parallel
-pesto run --env staging
+# Scaffold a test for an endpoint (planned)
+pesto generate e2e users/create
 ```
 
 A generated test reads like this:
@@ -71,11 +74,22 @@ Pesto organizes tests by **level** as a core concept:
 - **E2E** (`tests/e2e/`) — classic hand-written tests for business logic and user
   journeys, organized by feature/domain (`tests/e2e/transfer/`).
 
+## Status
+
+Under active construction. **Available today:** the runtime library (`pesto.T`,
+`Client`, `Expect`/`Decode`, environments + auth) and the `pesto init` / `pesto run`
+CLI with the transform and JUnit reports. **Planned:** `pesto generate`, the
+schema-driven contract level, and fixtures. See the
+[roadmap](docs/design/roadmap.md).
+
 ## Documentation
 
+- [`docs/guides/getting-started.md`](docs/guides/getting-started.md) — install, scaffold, run
 - [`docs/overview.md`](docs/overview.md) — the problem and the philosophy
 - [`docs/architecture.md`](docs/architecture.md) — how Pesto is put together
 - [`docs/concepts.md`](docs/concepts.md) — the core building blocks
+- [`docs/reference/cli.md`](docs/reference/cli.md) — commands and flags
+- [`docs/reference/config.md`](docs/reference/config.md) — `pesto.yaml` + environments
 - [`docs/design/`](docs/design/) — roadmap and in-progress design notes
 
 ## Scope (first pass)

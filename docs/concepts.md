@@ -1,8 +1,13 @@
 # Core concepts
 
-These are the building blocks a QA engineer works with in Pesto. The shapes shown
-here are illustrative of the intended design - the framework is not yet
-implemented. For how they fit together, see [architecture.md](architecture.md)
+These are the building blocks a QA engineer works with in Pesto. For how they fit
+together, see [architecture.md](architecture.md); to start hands-on, see
+[guides/getting-started.md](guides/getting-started.md).
+
+Pesto is under active construction. Building blocks marked **(planned)** are
+designed but not yet implemented - see the [roadmap](design/roadmap.md). Available
+today: `pesto.T`, the `Client`, `Expect`/`Decode`, environments + auth, and the
+`init`/`run` CLI with JUnit reports.
 
 ## Test levels
 
@@ -12,7 +17,7 @@ structured, and how much Pesto does for you. The first two levels are **Contract
 and **E2E**. The full design - especially the schema-driven contract engine - is
 in [`design/active/design-test-levels.md`](design/active/design-test-levels.md).
 
-### Contract tests - `tests/contract/`
+### Contract tests - `tests/contract/` (planned)
 
 Contract tests validate the **request/response contract of a single endpoint** -
 shape, required vs. optional fields, data types, and field-level constraints - with
@@ -70,8 +75,8 @@ everything a test needs already wired for the selected environment:
 ```go
 func TestCreateUser(t *pesto.T) {
     // t.Client   - HTTP client pointed at the current environment
-    // t.Env       - resolved environment config + variables
-    // t.Fixtures  - access to fixtures / test data
+    // t.Env       - resolved environment config + variables   (planned)
+    // t.Fixtures  - access to fixtures / test data             (planned)
     // plus the usual t.Log, t.Fatal, t.Parallel, ...
 }
 ```
@@ -94,9 +99,9 @@ resp := t.Client.POST("/users").
     Send()
 ```
 
-Clients can be **generated** (`pesto generate client users`) to give a typed,
-domain-specific surface (e.g. `clients.Users(t).Create(payload)`) instead of raw
-paths - the Django-style codegen at work.
+Clients can be **generated** (`pesto generate client users`, _planned_) to give a
+typed, domain-specific surface (e.g. `clients.Users(t).Create(payload)`) instead of
+raw paths - the Django-style codegen at work.
 
 ## Expect - fluent assertions
 
@@ -143,19 +148,20 @@ An environment captures everything that differs between where you run the tests 
 base URL, auth, and free-form variables:
 
 ```yaml
-# envs/staging.yaml
+# environments/staging.yaml
 base_url: https://staging.acme.example
 auth:
   type: bearer
-  token: ${ACME_STAGING_TOKEN}   # from env var / secret
+  token: ${ACME_STAGING_TOKEN}   # expanded from env var / secret at load time
 variables:
-  default_account: 42
+  default_account: "42"
 ```
 
 You select one at run time (`pesto run --env staging`). The same test runs against
-any environment without modification.
+any environment without modification. String values support `${VAR}` expansion so
+secrets stay out of the files. Full format: [reference/config.md](reference/config.md).
 
-## Fixtures
+## Fixtures (planned)
 
 Fixtures provide reusable test data and setup/teardown so tests don't repeat
 themselves and clean up after themselves:
@@ -171,7 +177,7 @@ func TestListUsers(t *pesto.T) {
 The exact fixture lifecycle and isolation model is being designed in
 [`design/active/design-fixtures.md`](design/active/design-fixtures.md)
 
-## Suites
+## Suites (planned)
 
 A suite groups related E2E tests under a feature/domain folder
 (`tests/e2e/<domain>/`) with shared setup. Generated with
@@ -183,16 +189,18 @@ and shared hooks. (Contract tests are organized by API surface instead - see
 
 The `pesto` command is the entry point for everything a QA engineer does:
 
-| Command | Purpose |
-| --- | --- |
-| `pesto init <name>` | Scaffold a new test project (full structure). |
-| `pesto generate test <path>` | Scaffold a test file from conventions. |
-| `pesto generate client <name>` | Scaffold a typed API client. |
-| `pesto generate suite <name>` | Scaffold a test suite for a domain. |
-| `pesto run [--env <e>] [--filter <f>]` | Run tests for an environment, with reports. |
+| Command | Purpose | Status |
+| --- | --- | --- |
+| `pesto init <name>` | Scaffold a new test project (full structure). | available |
+| `pesto run [--env <e>] [--report junit]` | Transform + run tests, with reports. | available |
+| `pesto version` | Print the CLI version. | available |
+| `pesto generate e2e <domain>/<name>` | Scaffold an E2E test. | planned |
+| `pesto generate contract <api-path>` | Scaffold a schema-driven contract bundle. | planned |
+| `pesto generate client <name>` | Scaffold a typed API client. | planned |
+| `pesto generate suite <domain>` | Scaffold a test suite for a domain. | planned |
 
-The full command surface is being designed in
-[`design/active/design-cli.md`](design/active/design-cli.md)
+Full command/flag details: [reference/cli.md](reference/cli.md). The command surface
+is designed in [`design/active/design-cli.md`](design/active/design-cli.md).
 
 ## Reports
 

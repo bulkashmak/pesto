@@ -6,6 +6,10 @@
 
 > Direction: authoring model decided; **mechanism decided** (overlay + AST rewrite,
 > see below).
+>
+> **Implemented (Phase 2):** `pesto.Run`, `internal/transform`, and the overlay-based
+> `pesto run` are built and transform `*pesto.T` tests end to end. Remaining scope
+> on `pesto.T` itself (`t.Env`, `t.Fixtures`) is still open.
 
 ## Decision
 

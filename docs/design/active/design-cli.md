@@ -8,6 +8,11 @@ This captures the intended CLI surface and the questions that
 are still undecided. The CLI is Pesto's primary interface for QA engineers, so it
 carries the "Django-like codegen" and "Vue-like structure" goals.
 
+> **Implemented (Phase 2):** `pesto init`, `pesto run` (with `--env`/`--report`/
+> `--out`/`--keep` and `go test` passthrough), and `pesto version`. See
+> [reference/cli.md](../../reference/cli.md) for the shipped surface. `pesto generate`
+> is still to come (Phase 3+).
+
 ## Intended commands
 
 ```

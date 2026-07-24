@@ -150,8 +150,8 @@ What happens when a QA engineer runs `pesto run --env staging`:
    already wired with a `Client` pointed at the selected environment. It builds
    requests, sends them, and asserts on the responses.
 5. **Collect results.** The CLI captures pass/fail/timing and writes reports
-   (JUnit XML for CI - the CI-standard report schema, not the JUnit tool - plus
-   human-readable formats) to `reports/`.
+   (JUnit XML for CI - the CI-standard report schema, not the JUnit tool)
+   to `reports/`. JUnit is implemented; JSON/HTML formats are planned.
 
 ## How config reaches a test
 
@@ -166,6 +166,12 @@ pesto.yaml ────────────────┼─► resolved co
 
 A test written against `/users` runs unchanged against staging or production; only
 `--env` changes.
+
+Concretely (as implemented): `pesto run` passes the selected environment to the
+test binary through the `PESTO_ENV` and `PESTO_ROOT` process variables. `pesto.Run`
+loads and applies that environment once per binary. Keeping the wiring in process
+variables (not generated code) means secrets and `${VAR}` values stay resolved at
+run time, never written into files.
 
 ## What's deliberately out of scope of the core
 
