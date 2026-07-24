@@ -1,6 +1,10 @@
-# Design note: test levels (WIP)
+# Design note: test levels
 
-Status: **direction decided, mechanics open**.
+- **Status:** active
+- **Owner:** bulat
+- **Promoted to:** —
+
+> Direction: decided; mechanics open.
 
 Test **levels** are a core concept: every test belongs to a level, and the level
 determines its location, structure, and how much Pesto generates. We start with
@@ -169,5 +173,5 @@ Remaining open:
 ## Future levels
 
 The level concept is open-ended: integration, smoke, or load (out of scope for
-now, see [overview.md](../overview.md)) could be added without changing the model -
+now, see [overview.md](../../overview.md)) could be added without changing the model -
 each gets a `tests/<level>/` root and its own structure rules.

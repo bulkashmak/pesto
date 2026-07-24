@@ -1,6 +1,10 @@
-# Design note: authoring model (WIP)
+# Design note: authoring model
 
-Status: **decided for v1, revisit later**.
+- **Status:** active
+- **Owner:** bulat
+- **Promoted to:** —
+
+> Direction: decided for v1, revisit later.
 
 ## Decision
 
@@ -36,7 +40,7 @@ for v1 in exchange for power and a single, simple architecture.
 A declarative layer (YAML/DSL) could sit **on top of** the Go runtime for the
 common, simple cases - compiling down to the same execution model rather than
 being a parallel engine. This stays a "later/maybe" item (see
-[roadmap.md](roadmap.md)) and should only be built if real usage shows the Go
+[roadmap.md](../roadmap.md)) and should only be built if real usage shows the Go
 barrier is blocking adoption.
 
 Open questions if we ever revisit:

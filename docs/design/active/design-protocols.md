@@ -1,6 +1,10 @@
-# Design note: protocols (WIP)
+# Design note: protocols
 
-Status: **open**. REST/HTTP+JSON is the committed first-class target. This note
+- **Status:** active
+- **Owner:** bulat
+- **Promoted to:** —
+
+REST/HTTP+JSON is the committed first-class target. This note
 tracks how (and whether) to extend beyond it.
 
 ## Committed: REST / HTTP+JSON

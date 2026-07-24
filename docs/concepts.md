@@ -10,7 +10,7 @@ Test **levels** are a core concept in Pesto, not a convention you bolt on. Every
 test belongs to a level, and the level decides where the test lives, how it is
 structured, and how much Pesto does for you. The first two levels are **Contract**
 and **E2E**. The full design - especially the schema-driven contract engine - is
-in [`wip/design-test-levels.md`](wip/design-test-levels.md).
+in [`design/active/design-test-levels.md`](design/active/design-test-levels.md).
 
 ### Contract tests - `tests/contract/`
 
@@ -80,7 +80,7 @@ Because it embeds `*testing.T`, anything you can do in a standard Go test still
 works. The `*pesto.T` signature is not discoverable by bare `go test`, so tests
 are launched with `pesto run`, which transforms them into standard `*testing.T`
 tests before compiling - see
-[`wip/design-test-context.md`](wip/design-test-context.md).
+[`design/active/design-test-context.md`](design/active/design-test-context.md).
 
 ## Client - the fluent HTTP layer
 
@@ -111,7 +111,7 @@ resp.Expect().
 ```
 
 The assertion vocabulary (status, headers, JSON path, schema, timing) is an open
-design area - see [`wip/design-assertions.md`](wip/design-assertions.md).
+design area - see [`design/active/design-assertions.md`](design/active/design-assertions.md).
 
 ### Decode to a struct and assert with any library
 
@@ -169,7 +169,7 @@ func TestListUsers(t *pesto.T) {
 ```
 
 The exact fixture lifecycle and isolation model is being designed in
-[`wip/design-fixtures.md`](wip/design-fixtures.md)
+[`design/active/design-fixtures.md`](design/active/design-fixtures.md)
 
 ## Suites
 
@@ -192,10 +192,10 @@ The `pesto` command is the entry point for everything a QA engineer does:
 | `pesto run [--env <e>] [--filter <f>]` | Run tests for an environment, with reports. |
 
 The full command surface is being designed in
-[`wip/design-cli.md`](wip/design-cli.md)
+[`design/active/design-cli.md`](design/active/design-cli.md)
 
 ## Reports
 
 After a run, Pesto writes results to `reports/`: JUnit XML for CI integration plus
 human-readable output. Reporting formats are tracked in the
-[roadmap](wip/roadmap.md)
+[roadmap](design/roadmap.md)

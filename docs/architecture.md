@@ -25,7 +25,7 @@ a standard `func TestXxx(t *testing.T)` wrapper which constructs the `*pesto.T`
 the normal Go toolchain over the generated package.
 
 The trade-off, chosen deliberately (see
-[`wip/design-test-context.md`](wip/design-test-context.md)): tests read cleanly and
+[`design/active/design-test-context.md`](design/active/design-test-context.md)): tests read cleanly and
 carry everything in one `*pesto.T` handle, at the cost of `pesto run` being the
 mandatory entry point - you cannot run a Pesto project with bare `go test`.
 
@@ -95,7 +95,7 @@ The layout is the same on every project. That sameness is the point: a QA
 engineer moving between two Pesto projects already knows where everything lives.
 Tests are split by **level** - `contract/` (request/response validation, mirrors
 the URL path or RPC method) and `e2e/` (business logic, organized by domain). See
-[concepts.md](concepts.md) and [`wip/design-test-levels.md`](wip/design-test-levels.md).
+[concepts.md](concepts.md) and [`design/active/design-test-levels.md`](design/active/design-test-levels.md).
 
 ## Execution flow
 
@@ -107,7 +107,7 @@ What happens when a QA engineer runs `pesto run --env staging`:
    functions and generates standard `func TestXxx(t *testing.T)` wrappers that
    build the `*pesto.T` and invoke the authored body. (How this transform works -
    AST rewrite vs. build-tagged generated files - is an open question, see
-   [`wip/design-test-context.md`](wip/design-test-context.md).)
+   [`design/active/design-test-context.md`](design/active/design-test-context.md).)
 3. **Run the tests.** The CLI invokes the Go test toolchain over the transformed
    package, passing through filters (`--filter`, tags) and parallelism settings.
 4. **Each test runs.** The generated wrapper hands the authored body a `*pesto.T`
@@ -139,4 +139,4 @@ A test written against `/users` runs unchanged against staging or production; on
 - **Non-functional testing.** Load and performance are out of scope (see
   [overview.md](overview.md)).
 
-Open questions about each layer are tracked in [`wip/`](wip/).
+Open questions about each layer are tracked in [`design/`](design/).

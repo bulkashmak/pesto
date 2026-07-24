@@ -1,6 +1,10 @@
-# Design note: fixtures & test data (WIP)
+# Design note: fixtures & test data
 
-Status: **open**. Fixtures are how tests get the data they need and clean up after
+- **Status:** active
+- **Owner:** bulat
+- **Promoted to:** —
+
+Fixtures are how tests get the data they need and clean up after
 themselves. Getting isolation right is what makes a suite trustworthy.
 
 ## Goals

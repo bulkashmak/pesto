@@ -76,7 +76,7 @@ Pesto organizes tests by **level** as a core concept:
 - [`docs/overview.md`](docs/overview.md) — the problem and the philosophy
 - [`docs/architecture.md`](docs/architecture.md) — how Pesto is put together
 - [`docs/concepts.md`](docs/concepts.md) — the core building blocks
-- [`docs/wip/`](docs/wip/) — roadmap and in-progress design notes
+- [`docs/design/`](docs/design/) — roadmap and in-progress design notes
 
 ## Scope (first pass)
 

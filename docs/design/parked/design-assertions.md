@@ -1,6 +1,10 @@
-# Design note: assertions (WIP)
+# Design note: assertions
 
-Status: **open**. The assertion API is the most-used surface in any test, so its
+- **Status:** parked
+- **Owner:** bulat
+- **Promoted to:** —
+
+The assertion API is the most-used surface in any test, so its
 ergonomics matter a lot.
 
 ## Goals

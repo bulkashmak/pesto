@@ -73,4 +73,4 @@ on every project
 - **Not a no-code tool.** Tests are Go code (scaffolded for you). This is a
   deliberate trade-off favoring power and type-safety over a zero-code barrier.
   An accessibility layer may be reconsidered later - see
-  [`wip/design-authoring.md`](wip/design-authoring.md)
+  [`design/active/design-authoring.md`](design/active/design-authoring.md)

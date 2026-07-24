@@ -7,7 +7,7 @@
 
 - [x] README with the pitch and vision
 - [x] `docs/` overview, architecture, concepts
-- [ ] `docs/wip/` design notes for the open questions (in progress)
+- [ ] `docs/design/active/` design notes for the open questions (in progress)
 - [ ] Decide module path and minimum Go version
 
 ## Phase 1 - Runtime core (the library)
@@ -30,7 +30,7 @@ The smallest thing that lets someone write a Pesto test by hand, no CLI yet.
 
 - [ ] `pesto init <name>` - scaffold the full project layout
 - [ ] **Transform step** - rewrite `func TestX(t *pesto.T)` into standard
-      `*testing.T` wrappers (see [design-test-context.md](design-test-context.md))
+      `*testing.T` wrappers (see [design-test-context.md](active/design-test-context.md))
 - [ ] `pesto run --env <e>` - resolve config, transform, drive `go test`, exit codes
 - [ ] JUnit XML report output
 
@@ -49,7 +49,7 @@ boilerplate.
 
 ## Phase 4 - Contract level (schema-driven)
 
-The first non-E2E level. See [design-test-levels.md](design-test-levels.md).
+The first non-E2E level. See [design-test-levels.md](active/design-test-levels.md).
 
 - [ ] JSON Schema (2020-12) bodies + thin Pesto HTTP envelope; OpenAPI 3.1 seeding
 - [ ] Contract engine: build happy-path request from schema, validate response
@@ -63,7 +63,7 @@ happy-path + violation checks via `pesto run`.
 ## Phase 5 - Fixtures & data
 
 - [ ] Fixture lifecycle (setup/teardown, isolation) - see
-      [design-fixtures.md](design-fixtures.md)
+      [design-fixtures.md](active/design-fixtures.md)
 - [ ] Data builders / factories
 
 ## Phase 6 - Reporting & DX polish
@@ -76,9 +76,9 @@ happy-path + violation checks via `pesto run`.
 ## Later / maybe
 
 - Additional test levels (integration, smoke)
-- gRPC and GraphQL clients (see [design-protocols.md](design-protocols.md)) -
+- gRPC and GraphQL clients (see [design-protocols.md](active/design-protocols.md)) -
   enables RPC contract tests
 - Typed client generation from OpenAPI specs
 - A higher-level / lower-barrier authoring layer (see
-  [design-authoring.md](design-authoring.md))
+  [design-authoring.md](active/design-authoring.md))
 - Retry/polling helpers for eventually-consistent systems

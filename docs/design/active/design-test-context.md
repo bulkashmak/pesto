@@ -1,6 +1,10 @@
-# Design note: test context & the transform (WIP)
+# Design note: test context & the transform
 
-Status: **decided (authoring model), mechanism open**.
+- **Status:** active
+- **Owner:** bulat
+- **Promoted to:** —
+
+> Direction: authoring model decided; mechanism open.
 
 ## Decision
 
@@ -70,4 +74,4 @@ must stay fast and debuggable.
 ## Related
 
 - Entry point and flags: [design-cli.md](design-cli.md)
-- Build order: [roadmap.md](roadmap.md) (transform lands in Phase 2)
+- Build order: [roadmap.md](../roadmap.md) (transform lands in Phase 2)

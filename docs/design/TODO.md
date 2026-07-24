@@ -1,0 +1,1 @@
+- Read all /docs/design/ markdown files

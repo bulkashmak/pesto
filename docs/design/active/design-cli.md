@@ -1,6 +1,10 @@
-# Design note: CLI (WIP)
+# Design note: CLI
 
-Status: **open**. This captures the intended CLI surface and the questions that
+- **Status:** active
+- **Owner:** bulat
+- **Promoted to:** —
+
+This captures the intended CLI surface and the questions that
 are still undecided. The CLI is Pesto's primary interface for QA engineers, so it
 carries the "Django-like codegen" and "Vue-like structure" goals.
 
@@ -18,7 +22,7 @@ pesto version
 
 ### `pesto init`
 
-Creates the full project layout (see [../architecture.md](../architecture.md)):
+Creates the full project layout (see [../architecture.md](../../architecture.md)):
 `pesto.yaml`, `environments/`, `clients/`, `tests/`, `fixtures/`, `helpers/`,
 `reports/`, `go.mod`.
 
