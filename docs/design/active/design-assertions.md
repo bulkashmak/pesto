@@ -2,21 +2,24 @@
 
 - **Status:** active
 - **Owner:** bulat
-- **Promoted to:** —
+- **Promoted to:** -
 
-The assertion API is the most-used surface in any test, so its
-ergonomics matter a lot.
+The assertion API is the most-used surface in any test, so its ergonomics matter a
+lot. But it is **optional, never mandatory**: engineers are never forced to use it.
+They can always decode the response into a model and assert with the standard
+library (or testify, gotest.tools, go-cmp, ...). Pesto's assertions are a
+convenience, not a lock-in. This is the load-bearing principle of the note.
 
 ## Goals
 
+- **Not a walled garden.** The fluent API is for convenience, never a requirement.
+  A user must always be able to decode the response to a plain struct and assert
+  with any library they prefer - stdlib included. See the escape hatch below.
 - **Readable top-to-bottom.** A QA engineer should read a test like a checklist.
 - **Good failure messages.** On failure, say what was expected, what was received,
   and where (path/field).
 - **Soft vs. hard failures.** Sometimes you want to stop at the first failure;
   sometimes you want all mismatches reported at once.
-- **Not a walled garden.** Pesto's fluent API is for convenience, never a
-  requirement. A user must always be able to drop down to a plain struct and
-  assert with any library they prefer.
 
 ## Two layers
 
@@ -42,6 +45,15 @@ var user User
 resp.Decode(&user)   // unmarshal into struct; fails the test on decode error
 require.Equal(t, "Bob", user.Name)
 ```
+
+For this to work, whatever Pesto hands the test must expose the underlying
+`*testing.T` (e.g. an embedded field), so `require.Equal(t, ...)` and any other
+library can be called directly. That same `*testing.T` is what the
+parallel/isolation transform operates on - which is why the choice of assertion
+style is **independent** of parallel execution: a test can decode to a struct and
+use stdlib assertions and still get `t.Parallel()` injected. See
+[design-parallelism.md](design-parallelism.md) and
+[design-test-context.md](design-test-context.md).
 
 ## Open questions
 

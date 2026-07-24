@@ -8,19 +8,20 @@
 - [x] README with the pitch and vision
 - [x] `docs/` overview, architecture, concepts
 - [ ] `docs/design/active/` design notes for the open questions (in progress)
-- [ ] Decide module path and minimum Go version
+- [x] Decide module path and minimum Go version
+      (`github.com/bulkashmak/pesto`, Go 1.22+)
 
 ## Phase 1 - Runtime core (the library)
 
 The smallest thing that lets someone write a Pesto test by hand, no CLI yet.
 
-- [ ] `pesto.T` wrapping `*testing.T`, constructed via `pesto.New(t)` /
-      `pesto.Run(t, …)`
-- [ ] `Client` - fluent HTTP builder over `net/http` (GET/POST/PUT/PATCH/DELETE,
+- [x] `pesto.T` embedding `*testing.T`, constructed via `pesto.New(t, opts…)`
+- [x] `Client` - fluent HTTP builder over `net/http` (GET/POST/PUT/PATCH/DELETE,
       JSON body, headers)
-- [ ] `Expect` - status, header, and JSON-path assertions
-- [ ] Environment config loading (`pesto.yaml` + `environments/*.yaml`)
-- [ ] Auth: bearer + basic to start
+- [x] `Expect` - status, header, and JSON-path assertions (+ `Decode` escape hatch)
+- [x] Environment config loading (`pesto.yaml` + `environments/*.yaml`,
+      with `${VAR}` expansion)
+- [x] Auth: bearer + basic to start
 
 **Done when:** a hand-written standard `func TestX(t *testing.T)` that calls
 `pesto.New(t)` can hit a real API and assert on it via `go test`. (The clean

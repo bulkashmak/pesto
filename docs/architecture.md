@@ -64,6 +64,42 @@ and **owns the run**: transform, environment selection, filtering, and reporting
    authored tests import (`github.com/bulkashmak/pesto/...`). This is what actually
    issues requests and makes assertions.
 
+## Repository layout (this repo)
+
+Not to be confused with a *generated* project below - this is how Pesto's **own**
+source is organized. The two halves above map onto it directly:
+
+```
+pesto/                        module github.com/bulkashmak/pesto
+├── pesto.go                  # the PUBLIC runtime library lives at the module root:
+├── client.go                 #   pesto.T, Client, Response, Expect - exactly what a
+├── response.go               #   test author imports. Kept small and public.
+├── expect.go
+├── doc.go
+├── cmd/
+│   └── pesto/
+│       └── main.go           # the `pesto` CLI binary (go install .../cmd/pesto)
+├── internal/                 # private implementation - not importable by users
+│   ├── transform/            #   *pesto.T → *testing.T rewrite
+│   ├── generate/             #   pesto generate templates + logic
+│   └── config/               #   pesto.yaml + environments loader
+└── docs/
+```
+
+Two deliberate choices:
+
+- **Library at the module root.** The import path *is* the package name, so a user
+  writes `import "github.com/bulkashmak/pesto"` and calls `pesto.New(t)`. Burying it
+  in `pkg/pesto/` would only lengthen the path without changing the call. The root
+  package stays limited to the public runtime surface; everything else lives under
+  `cmd/` or `internal/`.
+- **CLI internals under `internal/`.** The transform, codegen, and config loader are
+  compiler-enforced private, so they can be refactored freely without breaking
+  anyone importing Pesto.
+
+`cmd/` and `internal/` arrive in Phase 2 (the CLI); until then the repo is just the
+root runtime library. Empty directories are not created ahead of need.
+
 ## Anatomy of a Pesto project
 
 `pesto init acme-api-tests` produces a complete, opinionated layout:
