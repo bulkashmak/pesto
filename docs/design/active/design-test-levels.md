@@ -102,6 +102,28 @@ From one schema Pesto derives:
 2. **negative variants**, one per derived violation → expect the `on_violation`
    response (the envelope default, with optional per-field overrides).
 
+### Happy-path values come from the schema's own examples (decided, drafted)
+
+Constraint-based value generation - inventing a string that satisfies `pattern`,
+a valid `format: email`, a number inside `minimum`/`maximum` - is a project of its
+own (it's the core of every property-based-testing library) and is explicitly
+**out of scope for v1**; it moves to later/maybe. Instead, the happy-path request
+takes each field's value from the schema itself, in priority order:
+
+1. `const`
+2. `examples[0]`
+3. `default`
+4. for `enum`: the first member
+
+A required field with none of these fails **when the contract case is built**,
+with an error telling the author which field needs an example - Pesto never
+silently invents a value. This keeps generated requests predictable and makes the
+schema self-documenting.
+
+Values the schema cannot know - a valid `{id}` path param, an auth token - come
+from the environment (`variables` / `auth`), not from created data; see the v1
+fixtures split in [design-fixtures.md](design-fixtures.md).
+
 ### Relationship to OpenAPI
 
 OpenAPI and JSON Schema are not competing choices: **OpenAPI = JSON Schema (body
@@ -127,9 +149,10 @@ Remaining open:
   already says?
 - **OpenAPI version.** 3.1 aligns with JSON Schema 2020-12; 3.0 uses a divergent
   schema dialect. Support only 3.1 for seeding, or convert 3.0?
-- **Where do valid example values come from?** A happy-path request needs real-ish
-  values (and possibly a real referenced resource, e.g. a valid `{id}`). From JSON
-  Schema `examples`/`default`/`const`, a fixture, or a constraint-based generator?
+- **Where do valid example values come from?** *Decided (drafted):* from the
+  schema's own `const`/`examples`/`default` only, failing loudly otherwise -
+  constraint-based generation is out of scope for v1. See "Happy-path values"
+  above.
 - **Validator dependency.** Confirm `santhosh-tekuri/jsonschema` (or similar)
   covers draft 2020-12 incl. `format` assertions, which are optional in the spec.
 
@@ -156,9 +179,10 @@ Remaining open:
 
 ### Scope & semantics
 
-- **Auth/setup for contract tests.** "No business logic" still needs a valid auth
-  token and maybe a referenced resource to hit a real endpoint. How is that
-  supplied without turning a contract test into an E2E test?
+- **Auth/setup for contract tests.** *Decided (drafted):* auth comes from the
+  environment's `auth` config and referenced resources from environment
+  `variables` - contract tests never create data in v1. See the v1 scope split in
+  [design-fixtures.md](design-fixtures.md).
 - **Where does the contract boundary stop?** Status + body shape + types, yes.
   Cross-field rules ("end_date after start_date")? Probably E2E, not contract.
 - **Response validation depth.** Required fields and types for sure; full schema

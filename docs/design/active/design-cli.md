@@ -65,16 +65,37 @@ The generate command is **level-aware** (see
 schema-driven endpoint bundle under `tests/contract/<api-path>/` (mirroring the URL
 or RPC method); `e2e` scaffolds a Go test under `tests/e2e/<domain>/`.
 
-Open questions:
+Decided (drafted for Phase 3):
 
-- **Path → folder mapping for contract.** `users/post` → `tests/contract/users/post/`;
-  how are `{path params}`, hyphens, and casing normalized deterministically?
-- **Seed contract from OpenAPI?** `pesto generate contract users/post --from openapi.yaml`
-  to derive the schema from an existing spec, vs. an empty schema to fill in.
-- `generate e2e transfer/happy_path` → file path and test name mapping. What's the rule?
-- Can `generate client` derive a typed client from an OpenAPI spec, or is it an
-  empty stub to fill in (Phase 3 vs. later)?
-- How configurable are templates? Project-local overrides in `pesto.yaml`?
+- **One shared normalization rule** for every user-supplied name segment:
+  lowercase, hyphens and spaces become underscores, and the result must match
+  `[a-z][a-z0-9_]*` - otherwise generate errors out with the offending segment.
+  Deterministic: the author can predict the file path from the command.
+- **`generate e2e <domain>/<name>`** → `tests/e2e/<domain>/<name>_test.go`,
+  `package <domain>`, containing `func Test<CamelCase(name)>(t *pesto.T)`.
+  Example: `transfer/happy_path` → `tests/e2e/transfer/happy_path_test.go` with
+  `func TestHappyPath`. Exactly two segments in v1; deeper nesting is an error
+  until a real need shows up.
+- **`generate suite <domain>`** → creates `tests/e2e/<domain>/` with a
+  `suite_test.go` holding the package comment and a home for shared helpers.
+  `generate e2e` into a domain that doesn't exist yet implies `generate suite`
+  first, so the common path is one command.
+- **`generate client <name>`** → an empty typed stub `clients/<name>/<name>.go`
+  wrapping `*pesto.Client`. Deriving a client from an OpenAPI spec stays in
+  later/maybe (see [roadmap.md](../roadmap.md)) - Phase 3 is templates only.
+- **Templates are compiled into the binary and not configurable in v1.**
+  Project-local template overrides (e.g. via `pesto.yaml`) are deferred until real
+  usage demands them.
+- Like `init`, generate **refuses to overwrite existing files**.
+
+Still open (deferred to Phase 4, with the contract engine):
+
+- Contract path → folder mapping beyond the shared normalization rule: path params
+  map as `GET /users/{id}` → `users/get_by_id/`; confirm the multi-param form and
+  the RPC casing rule when the engine lands (see
+  [design-test-levels.md](design-test-levels.md)).
+- **Seed contract from OpenAPI** (`--from openapi.yaml`): envelope + schemas from
+  an OpenAPI 3.1 operation vs. an empty schema to fill in.
 
 ### `pesto run`
 

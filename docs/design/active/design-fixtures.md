@@ -26,13 +26,33 @@ func TestListUsers(t *pesto.T) {
 }
 ```
 
+## Decided (drafted): v1 scope splits across Phases 4 and 5
+
+Contract tests (Phase 4) need just enough setup to hit a real endpoint - a valid
+token and sometimes a pre-existing referenced resource - while the full fixture
+lifecycle is Phase 5. To keep the roadmap boundary honest:
+
+- **Phase 4 ships a minimal primitive only.** Auth comes from the environment
+  (already built); referenced values (a valid `{id}`, a tenant) come from
+  environment `variables`; and any helper that *does* create data registers its
+  teardown with `t.Cleanup` immediately after the create succeeds. No `t.Fixtures`
+  accessor, no factories, no namespacing.
+- **Phase 5 ships the real thing.** `t.Fixtures` on `pesto.T`, factories/builders,
+  isolation namespacing, suite-level lifetimes. Phase 5 is also the gate for
+  parallel-by-default (see [design-parallelism.md](design-parallelism.md)):
+  `t.Parallel()` injection stays off until isolation makes it safe.
+- **Teardown base mechanism is `t.Cleanup`.** It runs on failure and on panic
+  within the test goroutine, which covers the realistic cases; the open questions
+  below narrow to the gaps (un-captured IDs, process death).
+
 ## Open questions
 
 - **Creation strategy.** Do fixtures create data *through the API under test*
   (realistic, but couples setup to the same endpoints being tested) or through a
   side channel (seed endpoint, DB, admin API)?
-- **Teardown reliability.** If a test panics mid-way, how do we guarantee cleanup?
-  Lean on `t.Cleanup`? What about data created but whose ID we didn't capture?
+- **Teardown gaps beyond `t.Cleanup`.** Data created but whose ID we didn't
+  capture; the process dying mid-run. Orphan-sweeping? Run-scoped prefixes so
+  leftovers are identifiable?
 - **Isolation under parallelism.** Namespacing per test (unique prefixes/tenants)?
   Shared read-only fixtures vs. per-test mutable fixtures?
 - **Factories / builders.** A `UserFactory` with overridable defaults - what does

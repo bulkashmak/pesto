@@ -54,8 +54,13 @@ boilerplate.
 
 The first non-E2E level. See [design-test-levels.md](active/design-test-levels.md).
 
+- [ ] Minimal setup primitive: env-supplied auth + `variables` for referenced
+      resources, `t.Cleanup`-registered create helpers - full fixtures stay
+      Phase 5 (see [design-fixtures.md](active/design-fixtures.md))
 - [ ] JSON Schema (2020-12) bodies + thin Pesto HTTP envelope; OpenAPI 3.1 seeding
-- [ ] Contract engine: build happy-path request from schema, validate response
+- [ ] Contract engine: build happy-path request from the schema's
+      `const`/`examples`/`default` (no constraint-based value generation in v1),
+      validate response
 - [ ] Negative cases: derive one per field violation from the schema, assert error
 - [ ] `pesto generate contract <api-path>` (path/RPC → folder mapping)
 - [ ] Contract tests discovered and run by `pesto run` alongside E2E
@@ -68,6 +73,9 @@ happy-path + violation checks via `pesto run`.
 - [ ] Fixture lifecycle (setup/teardown, isolation) - see
       [design-fixtures.md](active/design-fixtures.md)
 - [ ] Data builders / factories
+- [ ] Parallel-by-default: transform-time `t.Parallel()` injection, gated on
+      isolation being solid (see
+      [design-parallelism.md](active/design-parallelism.md))
 
 ## Phase 6 - Reporting & DX polish
 
