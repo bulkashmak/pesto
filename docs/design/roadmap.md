@@ -3,7 +3,7 @@
 > This is a working document. Nothing here is committed; it captures the intended
 > order of building Pesto and what "done" means for each phase.
 
-## Phase 0 - Documentation & design (current)
+## Phase 0 - Documentation & design (ongoing alongside development)
 
 - [x] README with the pitch and vision
 - [x] `docs/` overview, architecture, concepts
