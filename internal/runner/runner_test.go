@@ -68,6 +68,38 @@ func TestRunWritesJUnitReport(t *testing.T) {
 	}
 }
 
+// TestRunSymlinkedRoot ensures a root reached through a symlink (as macOS temp
+// dirs are) is resolved before building the overlay, so its keys match the paths
+// go test sees.
+func TestRunSymlinkedRoot(t *testing.T) {
+	abs, err := filepath.Abs("testdata/basic")
+	if err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(t.TempDir(), "link")
+	if err := os.Symlink(abs, link); err != nil {
+		t.Skipf("cannot create symlink: %v", err)
+	}
+
+	var out, errOut bytes.Buffer
+	code, err := Run(Options{
+		Root:   link,
+		Args:   []string{"-run", "TestPing", "-v", "./..."},
+		Stdout: &out,
+		Stderr: &errOut,
+	})
+	combined := out.String() + errOut.String()
+	if err != nil {
+		t.Fatalf("run pipeline: %v\n%s", err, combined)
+	}
+	if code != 0 {
+		t.Fatalf("exit = %d, want 0\n%s", code, combined)
+	}
+	if !strings.Contains(combined, "TestPing") || !strings.Contains(combined, "PASS") {
+		t.Errorf("expected TestPing to run and PASS:\n%s", combined)
+	}
+}
+
 // TestRunNoTests reports a clear error when a project has no Pesto tests.
 func TestRunNoTests(t *testing.T) {
 	_, err := Run(Options{Root: t.TempDir(), Stdout: &bytes.Buffer{}, Stderr: &bytes.Buffer{}})

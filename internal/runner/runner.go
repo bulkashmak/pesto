@@ -38,6 +38,13 @@ func Run(opts Options) (exitCode int, err error) {
 	if err != nil {
 		return 1, err
 	}
+	// The overlay maps files by the path go test sees, and go resolves symlinks
+	// (e.g. macOS's /var -> /private/var temp dirs). An unresolved root would make
+	// every overlay key miss silently, feeding the compiler untransformed tests.
+	root, err = filepath.EvalSymlinks(root)
+	if err != nil {
+		return 1, err
+	}
 
 	overlay, tmpDir, err := buildOverlay(root)
 	if err != nil {
