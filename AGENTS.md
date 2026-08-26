@@ -13,10 +13,10 @@ does not replace the test runner.
 
 ## Status
 
-Under active construction. **Implemented (Phases 1-2):** the runtime library
+Under active construction. **Implemented (Phases 1-3):** the runtime library
 (`pesto.T`, `Client`, `Expect`/`Decode`, config, auth) and the CLI (`pesto init`,
-`pesto run` with the transform + JUnit reports, `pesto version`). **Next:** Phase 3
-`pesto generate`, then contract-level tests and fixtures. The source of truth for
+`pesto run` with the transform + JUnit reports, `pesto generate e2e|suite|client`,
+`pesto version`). **Next:** Phase 4 contract-level tests, then fixtures. The source of truth for
 progress is [docs/design/roadmap.md](docs/design/roadmap.md).
 
 ## Module & toolchain
@@ -38,8 +38,8 @@ The single most important structural rule:
 - **The CLI is `cmd/pesto`** (`package main`), installable via
   `go install github.com/bulkashmak/pesto/cmd/pesto@latest`.
 - **CLI implementation lives under `internal/`** (compiler-private): `transform`,
-  `runner`, `report`, `scaffold`. All new CLI-only logic goes here, never in the
-  root.
+  `runner`, `report`, `scaffold`, `generate`. All new CLI-only logic goes here,
+  never in the root.
 
 Dependency arrow points one way only: `cmd/pesto → root + internal/*`; the root
 depends on neither. Preserve this when adding code.
@@ -54,6 +54,7 @@ depends on neither. Preserve this when adding code.
 | `internal/runner` | builds the `go test -overlay` map and drives `go test` (incl. `--report`) |
 | `internal/report` | `go test -json` → JUnit XML |
 | `internal/scaffold` | `pesto init` project generator (templated layout) |
+| `internal/generate` | `pesto generate e2e|suite|client` file scaffolding (templates + name rules) |
 
 ## The transform (why `pesto run` is required)
 

@@ -29,7 +29,7 @@ pesto init acme-api-tests
 # Run the suite against an environment, with a CI report
 pesto run --env staging --report junit
 
-# Scaffold a test for an endpoint (planned)
+# Scaffold a test for an endpoint
 pesto generate e2e users/create
 ```
 
@@ -77,10 +77,10 @@ Pesto organizes tests by **level** as a core concept:
 ## Status
 
 Under active construction. **Available today:** the runtime library (`pesto.T`,
-`Client`, `Expect`/`Decode`, environments + auth) and the `pesto init` / `pesto run`
-CLI with the transform and JUnit reports. **Planned:** `pesto generate`, the
-schema-driven contract level, and fixtures. See the
-[roadmap](docs/design/roadmap.md).
+`Client`, `Expect`/`Decode`, environments + auth) and the CLI - `pesto init`,
+`pesto run` with the transform and JUnit reports, and `pesto generate` for E2E
+tests, suites, and client stubs. **Planned:** the schema-driven contract level and
+fixtures. See the [roadmap](docs/design/roadmap.md).
 
 ## Documentation
 

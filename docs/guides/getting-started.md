@@ -1,7 +1,7 @@
 # Getting started
 
 This walks you from nothing to a passing Pesto test and a CI report. It reflects
-what is implemented today (Phases 1-2); see the [roadmap](../design/roadmap.md) for
+what is implemented today (Phases 1-3); see the [roadmap](../design/roadmap.md) for
 what is planned.
 
 ## 1. Install the CLI
@@ -85,17 +85,23 @@ pesto run --env dev
 See the [config reference](../reference/config.md) for the full file format and the
 [CLI reference](../reference/cli.md) for every command and flag.
 
-## 6. Write a test
+## 6. Scaffold your own test
 
-Replace the example with your own, using the fluent client + assertions - or decode
-into a struct and assert with any library you like:
+Scaffold a test into a new domain; the domain's suite file (a home for its shared
+helpers) is created automatically on first use:
+
+```bash
+pesto generate e2e users/create
+# created tests/e2e/users/suite_test.go
+# created tests/e2e/users/create_test.go
+```
+
+Then fill in the generated `func TestCreate(t *pesto.T)`, using the fluent
+client + assertions - or decode into a struct and assert with any library you
+like:
 
 ```go
-package users
-
-import "github.com/bulkashmak/pesto"
-
-func TestCreateUser(t *pesto.T) {
+func TestCreate(t *pesto.T) {
 	resp := t.Client.POST("/users").
 		JSON(map[string]any{"name": "Bob"}).
 		Send()
@@ -106,5 +112,16 @@ func TestCreateUser(t *pesto.T) {
 		JSON("name").Equals("Bob")
 }
 ```
+
+Run just this test while iterating:
+
+```bash
+pesto run -run TestCreate -v
+```
+
+`pesto generate suite <domain>` (a domain folder by itself) and
+`pesto generate client <name>` (a typed client stub under `clients/`) round out
+the scaffolding - see the [CLI reference](../reference/cli.md) for the naming
+rules.
 
 For the building blocks, see [concepts.md](../concepts.md).

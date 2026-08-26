@@ -42,10 +42,11 @@ fresh project.
 
 ## Phase 3 - CLI: code generation (E2E level)
 
-- [ ] `pesto generate e2e <domain>/<name>`
-- [ ] `pesto generate suite <domain>`
-- [ ] `pesto generate client <name>`
-- [ ] Templates follow project conventions consistently
+- [x] `pesto generate e2e <domain>/<name>`
+- [x] `pesto generate suite <domain>`
+- [x] `pesto generate client <name>`
+- [x] Templates follow project conventions consistently
+      (built into the binary, gofmt-clean, shared name normalization)
 
 **Done when:** a QA engineer can scaffold and run a new E2E test without writing
 boilerplate.

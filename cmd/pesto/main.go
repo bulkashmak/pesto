@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/bulkashmak/pesto"
+	"github.com/bulkashmak/pesto/internal/generate"
 	"github.com/bulkashmak/pesto/internal/runner"
 	"github.com/bulkashmak/pesto/internal/scaffold"
 )
@@ -29,8 +30,7 @@ func main() {
 	case "version":
 		fmt.Printf("pesto %s\n", version)
 	case "generate":
-		fmt.Fprintf(os.Stderr, "pesto %s: not implemented yet\n", os.Args[1])
-		os.Exit(1)
+		os.Exit(cmdGenerate(os.Args[2:]))
 	case "-h", "--help", "help":
 		usage()
 	default:
@@ -45,13 +45,20 @@ func usage() {
 
 Usage:
   pesto init <name> [--module <path>]
+  pesto generate <e2e|suite|client> <name> [--root <dir>]
   pesto run [--env <name>] [--root <dir>] [--report junit] [--out <path>] [go test args...]
   pesto version
 
 Commands:
   init       scaffold a new test project
+  generate   scaffold a test, suite, or client inside a project
   run        transform *pesto.T tests and drive `+"`go test`"+`
   version    print the pesto version
+
+Generate:
+  pesto generate e2e <domain>/<name>   an E2E test, e.g. e2e transfer/happy_path
+  pesto generate suite <domain>        an E2E domain folder with shared helpers
+  pesto generate client <name>         a typed client stub under clients/
 `)
 }
 
@@ -104,6 +111,61 @@ Next steps:
   go get %s@latest   # resolve the pesto runtime dependency
   pesto run
 `, name, name, scaffold.RuntimeImportPath())
+	return 0
+}
+
+// cmdGenerate scaffolds a file inside an existing project.
+func cmdGenerate(args []string) int {
+	root := "."
+	var positional []string
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch {
+		case arg == "--root" || arg == "-root":
+			if i+1 >= len(args) {
+				fmt.Fprintln(os.Stderr, "pesto: --root needs a value")
+				return 2
+			}
+			i++
+			root = args[i]
+		case strings.HasPrefix(arg, "--root="):
+			root = strings.TrimPrefix(arg, "--root=")
+		case strings.HasPrefix(arg, "-"):
+			fmt.Fprintf(os.Stderr, "pesto: unknown flag %q\n", arg)
+			return 2
+		default:
+			positional = append(positional, arg)
+		}
+	}
+	if len(positional) != 2 {
+		fmt.Fprintln(os.Stderr, "pesto: generate needs a kind and a name\n\nUsage: pesto generate <e2e|suite|client> <name> [--root <dir>]")
+		return 2
+	}
+	kind, name := positional[0], positional[1]
+
+	var created []string
+	var err error
+	switch kind {
+	case "e2e":
+		created, err = generate.E2E(root, name)
+	case "suite":
+		created, err = generate.Suite(root, name)
+	case "client":
+		created, err = generate.Client(root, name)
+	case "contract":
+		fmt.Fprintln(os.Stderr, "pesto: generate contract is planned (Phase 4); see docs/design/roadmap.md")
+		return 1
+	default:
+		fmt.Fprintf(os.Stderr, "pesto: unknown generate kind %q (supported: e2e, suite, client)\n", kind)
+		return 2
+	}
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "pesto: %v\n", err)
+		return 1
+	}
+	for _, path := range created {
+		fmt.Printf("created %s\n", path)
+	}
 	return 0
 }
 

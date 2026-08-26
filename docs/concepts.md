@@ -99,9 +99,10 @@ resp := t.Client.POST("/users").
     Send()
 ```
 
-Clients can be **generated** (`pesto generate client users`, _planned_) to give a
-typed, domain-specific surface (e.g. `clients.Users(t).Create(payload)`) instead of
-raw paths - the Django-style codegen at work.
+Clients can be **scaffolded** (`pesto generate client users`) to give a typed,
+domain-specific surface (e.g. `users.New(t.Client).Create(payload)`) instead of
+raw paths - the Django-style codegen at work. The stub embeds `*pesto.Client`;
+you add one method per operation.
 
 ## Expect - fluent assertions
 
@@ -177,12 +178,13 @@ func TestListUsers(t *pesto.T) {
 The exact fixture lifecycle and isolation model is being designed in
 [`design/active/design-fixtures.md`](design/active/design-fixtures.md)
 
-## Suites (planned)
+## Suites
 
 A suite groups related E2E tests under a feature/domain folder
-(`tests/e2e/<domain>/`) with shared setup. Generated with
-`pesto generate suite transfer`, it gives a domain its own folder, conventions,
-and shared hooks. (Contract tests are organized by API surface instead - see
+(`tests/e2e/<domain>/`) with a `suite_test.go` for shared helpers. Generated with
+`pesto generate suite transfer` - or implicitly by the first
+`pesto generate e2e transfer/<name>` - it gives a domain its own folder and
+conventions. (Contract tests are organized by API surface instead - see
 [Test levels](#test-levels).)
 
 ## The CLI
@@ -194,10 +196,10 @@ The `pesto` command is the entry point for everything a QA engineer does:
 | `pesto init <name>` | Scaffold a new test project (full structure). | available |
 | `pesto run [--env <e>] [--report junit]` | Transform + run tests, with reports. | available |
 | `pesto version` | Print the CLI version. | available |
-| `pesto generate e2e <domain>/<name>` | Scaffold an E2E test. | planned |
+| `pesto generate e2e <domain>/<name>` | Scaffold an E2E test. | available |
+| `pesto generate suite <domain>` | Scaffold a test suite for a domain. | available |
+| `pesto generate client <name>` | Scaffold a typed API client stub. | available |
 | `pesto generate contract <api-path>` | Scaffold a schema-driven contract bundle. | planned |
-| `pesto generate client <name>` | Scaffold a typed API client. | planned |
-| `pesto generate suite <domain>` | Scaffold a test suite for a domain. | planned |
 
 Full command/flag details: [reference/cli.md](reference/cli.md). The command surface
 is designed in [`design/active/design-cli.md`](design/active/design-cli.md).

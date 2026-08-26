@@ -9,9 +9,10 @@ are still undecided. The CLI is Pesto's primary interface for QA engineers, so i
 carries the "Django-like codegen" and "Vue-like structure" goals.
 
 > **Implemented (Phase 2):** `pesto init`, `pesto run` (with `--env`/`--report`/
-> `--out`/`--keep` and `go test` passthrough), and `pesto version`. See
-> [reference/cli.md](../../reference/cli.md) for the shipped surface. `pesto generate`
-> is still to come (Phase 3+).
+> `--out`/`--keep` and `go test` passthrough), and `pesto version`.
+> **Implemented (Phase 3):** `pesto generate e2e|suite|client` per the decided
+> rules below (`internal/generate`). See [reference/cli.md](../../reference/cli.md)
+> for the shipped surface. `pesto generate contract` comes with Phase 4.
 
 ## Intended commands
 
@@ -65,7 +66,7 @@ The generate command is **level-aware** (see
 schema-driven endpoint bundle under `tests/contract/<api-path>/` (mirroring the URL
 or RPC method); `e2e` scaffolds a Go test under `tests/e2e/<domain>/`.
 
-Decided (drafted for Phase 3):
+Decided (implemented in Phase 3):
 
 - **One shared normalization rule** for every user-supplied name segment:
   lowercase, hyphens and spaces become underscores, and the result must match

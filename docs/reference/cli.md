@@ -5,9 +5,10 @@ _planned_ are on the [roadmap](../design/roadmap.md).
 
 ```
 pesto init <name> [--module <path>]
+pesto generate <e2e|suite|client> <name> [--root <dir>]
 pesto run [flags] [go test args...]
 pesto version
-pesto generate ...        # planned (Phase 3+)
+pesto generate contract ...        # planned (Phase 4)
 ```
 
 ## `pesto init <name>`
@@ -60,8 +61,33 @@ Notes:
 
 Prints the CLI version.
 
-## `pesto generate ...` (planned)
+## `pesto generate <kind> <name>`
 
-Django-style scaffolding of tests, clients, and suites (`generate e2e`,
-`generate contract`, `generate client`, `generate suite`). Designed in
-[design-cli.md](../design/active/design-cli.md); not yet implemented.
+Scaffolds one file (from a built-in template) inside an existing project. Every
+name segment is normalized - lowercased, hyphens and spaces become underscores -
+and must then match `[a-z][a-z0-9_]*`; anything else is an error. Existing files
+are never overwritten.
+
+| Command | Creates |
+| --- | --- |
+| `generate e2e <domain>/<name>` | `tests/e2e/<domain>/<name>_test.go` with `func Test<Name>(t *pesto.T)` |
+| `generate suite <domain>` | `tests/e2e/<domain>/suite_test.go` for the domain's shared helpers |
+| `generate client <name>` | `clients/<name>/<name>.go`, a typed stub wrapping `*pesto.Client` |
+
+`generate e2e` into a domain that does not exist yet creates the suite first, so
+one command is enough for a new domain.
+
+| Flag | Default | Meaning |
+| --- | --- | --- |
+| `--root <dir>` | `.` | project root (must contain `go.mod`) |
+
+Examples:
+
+```bash
+pesto generate e2e transfer/happy-path   # tests/e2e/transfer/happy_path_test.go
+pesto generate suite billing             # tests/e2e/billing/suite_test.go
+pesto generate client users              # clients/users/users.go
+```
+
+`generate contract` (schema-driven contract tests) is planned for Phase 4 - see
+the [roadmap](../design/roadmap.md).

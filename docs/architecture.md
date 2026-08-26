@@ -81,8 +81,10 @@ pesto/                        module github.com/bulkashmak/pesto
 │       └── main.go           # the `pesto` CLI binary (go install .../cmd/pesto)
 ├── internal/                 # private implementation - not importable by users
 │   ├── transform/            #   *pesto.T → *testing.T rewrite
-│   ├── generate/             #   pesto generate templates + logic
-│   └── config/               #   pesto.yaml + environments loader
+│   ├── runner/               #   overlay build + `go test` driver
+│   ├── report/               #   go test -json → JUnit XML
+│   ├── scaffold/             #   pesto init project generator
+│   └── generate/             #   pesto generate templates + logic
 └── docs/
 ```
 
