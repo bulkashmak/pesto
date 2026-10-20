@@ -83,6 +83,7 @@ pesto/                        module github.com/bulkashmak/pesto
 │   ├── cli/                  #   command layer: State shared by handlers
 │   │   ├── commands/         #     command registry (Register/Run) + error kinds
 │   │   └── handlers/         #     one handler_<name>.go per CLI command
+│   ├── project/              #   project root discovery (pesto.yaml / go.mod)
 │   ├── transform/            #   *pesto.T → *testing.T rewrite
 │   ├── runner/               #   overlay build + `go test` driver
 │   ├── report/               #   go test -json → JUnit XML

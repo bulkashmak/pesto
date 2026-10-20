@@ -21,6 +21,7 @@ import (
 // Options configures a run.
 type Options struct {
 	Root       string    // project root (module directory)
+	Dir        string    // directory go test runs in, inside Root; package args resolve against it (default Root)
 	Env        string    // environment name; empty means none selected
 	Args       []string  // extra arguments passed through to `go test`
 	Stdout     io.Writer // where go test stdout goes
@@ -44,6 +45,32 @@ func Run(opts Options) (exitCode int, err error) {
 	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
 		return 1, err
+	}
+
+	dir := root
+	if opts.Dir != "" {
+		if dir, err = filepath.Abs(opts.Dir); err != nil {
+			return 1, err
+		}
+		if dir, err = filepath.EvalSymlinks(dir); err != nil {
+			return 1, err
+		}
+		if rel, err := filepath.Rel(root, dir); err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return 1, fmt.Errorf("run directory %s is outside the project root %s", dir, root)
+		}
+	}
+
+	// Without a package pattern go test runs ./... from dir; fail clearly
+	// instead of go's "no packages to test" when nothing is there.
+	if dir != root && !hasPackageArg(opts.Args) {
+		found, err := hasTestFiles(root, dir)
+		if err != nil {
+			return 1, err
+		}
+		if !found {
+			rel, _ := filepath.Rel(root, dir)
+			return 1, fmt.Errorf("no tests in %s or its subfolders; run from a folder that contains tests, or pass a package path (e.g. pesto run ./...)", filepath.ToSlash(rel))
+		}
 	}
 
 	overlay, tmpDir, err := buildOverlay(root)
@@ -76,9 +103,12 @@ func Run(opts Options) (exitCode int, err error) {
 	}
 
 	cmd := exec.Command("go", args...)
-	cmd.Dir = root
+	cmd.Dir = dir
 	cmd.Stderr = opts.Stderr
 	cmd.Env = os.Environ()
+	// go trusts an inherited $PWD naming the same directory, which may be a
+	// symlinked path; that would bypass the resolved overlay keys again.
+	cmd.Env = append(cmd.Env, "PWD="+dir)
 	cmd.Env = append(cmd.Env, "PESTO_ROOT="+root)
 	if opts.Env != "" {
 		cmd.Env = append(cmd.Env, "PESTO_ENV="+opts.Env)
@@ -267,6 +297,29 @@ func hasPackageArg(args []string) bool {
 		}
 	}
 	return false
+}
+
+// hasTestFiles reports whether dir or any folder below it holds a _test.go
+// file, skipping the same directories as discovery.
+func hasTestFiles(root, dir string) (bool, error) {
+	found := false
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if path != dir && skipDir(root, path, d.Name()) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if strings.HasSuffix(d.Name(), "_test.go") {
+			found = true
+			return filepath.SkipAll
+		}
+		return nil
+	})
+	return found, err
 }
 
 // skipDir reports whether a directory should be skipped during discovery.

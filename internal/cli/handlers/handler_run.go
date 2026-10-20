@@ -6,14 +6,32 @@ import (
 	"github.com/bulkashmak/pesto"
 	"github.com/bulkashmak/pesto/internal/cli"
 	"github.com/bulkashmak/pesto/internal/cli/commands"
+	"github.com/bulkashmak/pesto/internal/project"
 	"github.com/bulkashmak/pesto/internal/runner"
 )
 
 // HandleRun transforms *pesto.T tests and drives `go test`. A failing test run
 // is returned as a *commands.ExitError carrying go test's exit code.
+//
+// Without --root, the project root is found by searching upward from the
+// working directory, and go test runs from the working directory, so package
+// patterns behave as in `go test` (a bare `pesto run` covers the current
+// subtree). With --root, everything runs from that root.
 func HandleRun(s *cli.State, cmd commands.Command) error {
 	cfg, err := parseRunArgs(cmd.Args)
 	if err != nil {
+		return err
+	}
+
+	var runDir string
+	if cfg.root == "" {
+		if runDir, err = s.Dir(); err != nil {
+			return err
+		}
+		if cfg.root, err = project.FindRoot(runDir); err != nil {
+			return err
+		}
+	} else if err := project.Check(cfg.root); err != nil {
 		return err
 	}
 
@@ -32,6 +50,7 @@ func HandleRun(s *cli.State, cmd commands.Command) error {
 
 	code, err := runner.Run(runner.Options{
 		Root:       cfg.root,
+		Dir:        runDir,
 		Env:        cfg.env,
 		Args:       cfg.passthrough,
 		Stdout:     s.Stdout,
@@ -50,6 +69,7 @@ func HandleRun(s *cli.State, cmd commands.Command) error {
 }
 
 // runConfig holds pesto's own `run` flags, separated from go test passthrough.
+// An empty root means --root was not given.
 type runConfig struct {
 	env, root, report, out string
 	keep                   bool
@@ -61,7 +81,7 @@ type runConfig struct {
 // Both `--flag value` and `--flag=value` forms are accepted. It cannot use
 // splitArgs, which rejects unknown flags.
 func parseRunArgs(args []string) (runConfig, error) {
-	cfg := runConfig{root: "."}
+	var cfg runConfig
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		if !strings.HasPrefix(arg, "-") {

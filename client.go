@@ -95,7 +95,11 @@ func (r *Request) Send() *Response {
 	}
 
 	fullURL := r.path
-	if r.client.baseURL != "" {
+	if r.client.baseURL == "" {
+		if u, err := url.Parse(r.path); err != nil || !u.IsAbs() {
+			r.t.Fatalf("pesto: %s %s: no base URL is configured, so the path cannot be resolved; set base_url in the environment file (environments/<env>.yaml) or use an absolute URL", r.method, r.path)
+		}
+	} else {
 		joined, err := url.JoinPath(r.client.baseURL, r.path)
 		if err != nil {
 			r.t.Fatalf("pesto: resolve URL for %s %s: %v", r.method, r.path, err)

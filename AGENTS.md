@@ -48,7 +48,8 @@ The single most important structural rule:
 Adding a command: write `internal/cli/handlers/handler_<name>.go` with
 `func Handle<Name>(s *cli.State, cmd commands.Command) error`, then register it
 in `cmd/pesto/main.go` with its usage and description (help is generated from
-the registry). Write output to `s.Stdout`/`s.Stderr`, never `os.Stdout`; return
+the registry). Write output to `s.Stdout`/`s.Stderr`, never `os.Stdout`, and get
+the working directory from `s.Dir()`, never `os.Getwd`; return
 `commands.Usagef(...)` for bad invocations (exit 2) and
 `&commands.ExitError{Code: n}` to propagate a specific exit code.
 
@@ -64,6 +65,7 @@ depends on neither. Preserve this when adding code.
 | `internal/cli` | `State` shared by every command handler (version, stdout/stderr) |
 | `internal/cli/commands` | command registry (`Register`/`Run`), `UsageError`, `ExitError` |
 | `internal/cli/handlers` | one handler per command: `init`, `generate`, `run`, `version`, `help` |
+| `internal/project` | project root discovery (walk up to `pesto.yaml`, else `go.mod`) for `run`/`generate` |
 | `internal/transform` | AST rewrite: `func TestX(t *pesto.T)` → body rename + generated `*testing.T` wrappers |
 | `internal/runner` | builds the `go test -overlay` map and drives `go test` (incl. `--report`) |
 | `internal/report` | `go test -json` → JUnit XML |

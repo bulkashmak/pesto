@@ -48,7 +48,7 @@ func TestParseRunArgs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.env != "dev" || cfg.report != "junit" || !cfg.keep || cfg.root != "." {
+	if cfg.env != "dev" || cfg.report != "junit" || !cfg.keep || cfg.root != "" {
 		t.Fatalf("cfg = %+v", cfg)
 	}
 	if want := []string{"-run", "TestX", "-v", "./..."}; !reflect.DeepEqual(cfg.passthrough, want) {
@@ -129,6 +129,68 @@ func TestPrintUsageListsRegisteredCommands(t *testing.T) {
 	for _, want := range []string{"pesto init <name>", "init   scaffold", "help   show help", "help:\n  more"} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("help output missing %q:\n%s", want, out.String())
+		}
+	}
+}
+
+func TestHandleGenerateFromSubdirectory(t *testing.T) {
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range []string{"go.mod", "pesto.yaml"} {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("module example.com/p\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sub := filepath.Join(root, "tests", "e2e")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	s, out := newState()
+	s.WorkDir = sub
+	if err := HandleGenerate(s, commands.Command{Name: "generate", Args: []string{"client", "users"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "clients", "users", "users.go")); err != nil {
+		t.Fatalf("client not created at the project root: %v", err)
+	}
+	want := "created " + filepath.Join("..", "..", "clients", "users", "users.go") + "\n"
+	if out.String() != want {
+		t.Fatalf("output = %q, want %q (relative to the working directory)", out.String(), want)
+	}
+}
+
+func TestHandleRunOutsideProject(t *testing.T) {
+	s, _ := newState()
+	s.WorkDir = t.TempDir()
+	err := HandleRun(s, commands.Command{Name: "run"})
+	if err == nil || !strings.Contains(err.Error(), "no Pesto project found") {
+		t.Fatalf("want project-not-found error, got %v", err)
+	}
+}
+
+func TestHandlersRejectInvalidRoot(t *testing.T) {
+	missing := filepath.Join(t.TempDir(), "missing")
+	empty := t.TempDir()
+
+	for _, c := range []struct {
+		name    string
+		handler commands.Handler
+		args    []string
+	}{
+		{"run", HandleRun, nil},
+		{"generate", HandleGenerate, []string{"client", "x"}},
+	} {
+		s, _ := newState()
+		err := c.handler(s, commands.Command{Name: c.name, Args: append(c.args, "--root", missing)})
+		if err == nil || !strings.Contains(err.Error(), "does not exist") {
+			t.Errorf("%s --root missing: got %v", c.name, err)
+		}
+		err = c.handler(s, commands.Command{Name: c.name, Args: append(c.args, "--root", empty)})
+		if err == nil || !strings.Contains(err.Error(), "is not a Pesto project") {
+			t.Errorf("%s --root empty: got %v", c.name, err)
 		}
 	}
 }

@@ -21,6 +21,15 @@ carries the "Django-like codegen" and "Vue-like structure" goals.
 > `handler_<name>.go` per command. `cmd/pesto/main.go` only wires them and maps
 > errors to exit codes (`UsageError` → 2, `ExitError` → its code, else 1). Help
 > is generated from the registered entries. Stdlib only - no CLI framework.
+>
+> **Implemented (project root discovery):** `run` and `generate` find the
+> project root by walking up from the working directory to the nearest
+> `pesto.yaml` (falling back to `go.mod`, since the config is optional), so they
+> work from any subfolder. `run` keeps `go test` semantics - package patterns
+> resolve against the working directory - so `pesto run` in a subfolder runs that
+> subtree with the project's config. Previously a subfolder run silently used no
+> environment and failed with `unsupported protocol scheme ""`; the runtime client
+> now also fails with an explicit "no base URL is configured" message.
 
 ## Intended commands
 

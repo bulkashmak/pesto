@@ -3,14 +3,17 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/bulkashmak/pesto/internal/cli"
 	"github.com/bulkashmak/pesto/internal/cli/commands"
 	"github.com/bulkashmak/pesto/internal/generate"
+	"github.com/bulkashmak/pesto/internal/project"
 )
 
 // HandleGenerate scaffolds a file inside an existing project:
-// `pesto generate <e2e|suite|client> <name> [--root <dir>]`.
+// `pesto generate <e2e|suite|client> <name> [--root <dir>]`. Without --root,
+// the project root is found by searching upward from the working directory.
 func HandleGenerate(s *cli.State, cmd commands.Command) error {
 	flags, positional, err := splitArgs(cmd.Args, "root")
 	if err != nil {
@@ -19,11 +22,20 @@ func HandleGenerate(s *cli.State, cmd commands.Command) error {
 	if len(positional) != 2 {
 		return commands.Usagef("generate needs a kind and a name")
 	}
+	kind, name := positional[0], positional[1]
+
+	workDir, err := s.Dir()
+	if err != nil {
+		return err
+	}
 	root := flags["root"]
 	if root == "" {
-		root = "."
+		if root, err = project.FindRoot(workDir); err != nil {
+			return err
+		}
+	} else if err := project.Check(root); err != nil {
+		return err
 	}
-	kind, name := positional[0], positional[1]
 
 	var created []string
 	switch kind {
@@ -42,6 +54,12 @@ func HandleGenerate(s *cli.State, cmd commands.Command) error {
 		return err
 	}
 	for _, path := range created {
+		// Show discovered (absolute) paths relative to where the user is.
+		if filepath.IsAbs(path) {
+			if rel, err := filepath.Rel(workDir, path); err == nil {
+				path = rel
+			}
+		}
 		fmt.Fprintf(s.Stdout, "created %s\n", path)
 	}
 	return nil

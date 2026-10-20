@@ -11,6 +11,18 @@ pesto version
 pesto generate contract ...        # planned (Phase 4)
 ```
 
+## Project root
+
+`pesto run` and `pesto generate` work from any directory inside a project. Without
+`--root`, pesto searches upward from the current directory for the nearest
+`pesto.yaml`; if there is none, the nearest `go.mod` marks the root. Outside any
+project they fail with a clear error.
+
+An explicit `--root` must be an existing directory containing `pesto.yaml` or
+`go.mod`; anything else is rejected before running. A bare `pesto run` from a
+folder with no tests below it (e.g. `reports/`) is an error rather than an empty
+run.
+
 ## `pesto init <name>`
 
 Scaffolds a new project directory named `<name>` with the full Pesto layout
@@ -35,7 +47,7 @@ package patterns, etc. all work.
 | Flag | Default | Meaning |
 | --- | --- | --- |
 | `--env <name>` | `default_env` from `pesto.yaml` | environment to run against |
-| `--root <dir>` | `.` | project root (module directory) |
+| `--root <dir>` | found by searching upward | project root (module directory) |
 | `--report <format>` | none | write a report; `junit` is supported |
 | `--out <path>` | `<root>/reports/junit.xml` | report output path |
 | `--keep` | off | keep the generated overlay temp dir for inspection |
@@ -47,7 +59,14 @@ pesto run                                  # default environment, all tests
 pesto run --env staging -run TestCreate -v # a subset, verbose
 pesto run --report junit                   # + reports/junit.xml
 pesto run --report junit --out out/ci.xml  # custom report path
+
+cd tests/e2e/transfer && pesto run         # only this folder's tests, project config
 ```
+
+Package patterns resolve against the directory you run from, as with `go test`:
+a bare `pesto run` runs the current directory and everything below it, using the
+project's `pesto.yaml` and environments. With `--root`, everything (patterns
+included) is relative to that root.
 
 Exit code is `go test`'s: `0` on success, non-zero on any test failure - suitable
 for CI.
@@ -79,7 +98,7 @@ one command is enough for a new domain.
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
-| `--root <dir>` | `.` | project root (must contain `go.mod`) |
+| `--root <dir>` | found by searching upward | project root (must contain `go.mod`) |
 
 Examples:
 
