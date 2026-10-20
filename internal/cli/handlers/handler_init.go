@@ -7,6 +7,7 @@ import (
 	"github.com/bulkashmak/pesto/internal/cli"
 	"github.com/bulkashmak/pesto/internal/cli/commands"
 	"github.com/bulkashmak/pesto/internal/scaffold"
+	"github.com/bulkashmak/pesto/internal/version"
 )
 
 // HandleInit scaffolds a new project directory: `pesto init <name> [--module <path>]`.
@@ -28,18 +29,28 @@ func HandleInit(s *cli.State, cmd commands.Command) error {
 		module = filepath.Base(name)
 	}
 
-	// TODO: inject the CLI's released version once tags exist; v0.0.0 relies on the
-	// user running `go get github.com/bulkashmak/pesto@latest` (or a replace).
-	if err := scaffold.Create(scaffold.Options{Dir: name, Module: module, PestoVersion: "v0.0.0"}); err != nil {
+	// A released CLI pins its own version, so the project's runtime matches the
+	// CLI that created it. A development build has no version a project could
+	// resolve; v0.0.0 is a placeholder that `go get ...@latest` replaces.
+	pin := version.IsRelease(s.Version)
+	runtimeVersion := "v0.0.0"
+	if pin {
+		runtimeVersion = s.Version
+	}
+	if err := scaffold.Create(scaffold.Options{Dir: name, Module: module, PestoVersion: runtimeVersion}); err != nil {
 		return err
 	}
 
+	resolve := fmt.Sprintf("go get %s@latest   # resolve the pesto runtime dependency", scaffold.RuntimeImportPath())
+	if pin {
+		resolve = fmt.Sprintf("go mod tidy   # download the pesto runtime (%s)", runtimeVersion)
+	}
 	fmt.Fprintf(s.Stdout, `Created Pesto project in %s/
 
 Next steps:
   cd %s
-  go get %s@latest   # resolve the pesto runtime dependency
+  %s
   pesto run
-`, name, name, scaffold.RuntimeImportPath())
+`, name, name, resolve)
 	return nil
 }

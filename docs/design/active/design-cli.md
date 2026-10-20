@@ -66,9 +66,9 @@ Decided (implemented in Phase 2):
 
 Still open:
 
-- **go.mod pesto version.** Today init pins `v0.0.0` and leans on the user's
-  `go get`; once the CLI has release tags it should inject its own version so the
-  require resolves without a manual `go get`.
+- ~~**go.mod pesto version.**~~ Resolved for v0.1.0: a released CLI writes its
+  own version into the require (next step: `go mod tidy`); a dev build keeps the
+  `v0.0.0` placeholder + `go get ...@latest`.
 - **Offline first run.** The example needs network on first `pesto run`. Acceptable
   for an API-testing tool, but an offline/self-contained example mode could be an
   option later.
@@ -138,8 +138,12 @@ Open questions:
 
 - **Single binary vs. `go run`.** Distribute `pesto` as a prebuilt binary, install
   via `go install`, or both?
-- **Versioning.** How does the CLI version relate to the runtime library version
-  a project imports? Must they match?
+- **Versioning.** Decided for v0.1.0: one repo, one tag - CLI and runtime share a
+  version (`internal/version` reads it from build info). They *should* match:
+  `init` pins the runtime to the CLI's version, and `pesto run` warns (never
+  fails) on a mismatch, skipping dev builds and `replace`d runtimes. Still open:
+  whether a future incompatible transform change should turn the warning into an
+  error for runtimes older than some floor.
 - **Relationship to raw `go test`.** Authored tests use a `*pesto.T` signature, so
   `pesto run` is **required** - it runs a codegen/transform step first (see
   [design-test-context.md](../shipped/design-test-context.md)). Bare `go test` will not run a

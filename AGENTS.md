@@ -68,7 +68,8 @@ depends on neither. Preserve this when adding code.
 | `internal/cli` | `State` shared by every command handler (version, stdout/stderr) |
 | `internal/cli/commands` | command registry (`Register`/`Run`), `UsageError`, `ExitError` |
 | `internal/cli/handlers` | one handler per command: `init`, `generate`, `run`, `version`, `help` |
-| `internal/project` | project root discovery (walk up to `pesto.yaml`, else `go.mod`) for `run`/`generate` |
+| `internal/version` | the CLI version from build info; `IsRelease` tells tags from dev builds |
+| `internal/project` | project root discovery (walk up to `pesto.yaml`, else `go.mod`) and `go.mod` requirement lookup |
 | `internal/transform` | AST rewrite: `func TestX(t *pesto.T)` → body rename + generated `*testing.T` wrappers |
 | `internal/runner` | builds the `go test -overlay` map and drives `go test` (incl. `--report`) |
 | `internal/report` | `go test -json` → JUnit XML |

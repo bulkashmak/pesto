@@ -51,6 +51,18 @@ fresh project.
 **Done when:** a QA engineer can scaffold and run a new E2E test without writing
 boilerplate.
 
+## Release v0.1.0
+
+The first tagged release: Phases 1-3 installable with `go install ...@v0.1.0`.
+
+- [x] CI (gofmt, vet, race tests, build) on the minimum and latest Go
+- [x] `pesto version` reports the build's real version (`internal/version`)
+- [x] `pesto init` pins the runtime to the CLI's version
+- [x] `pesto run` warns on a CLI/runtime version mismatch
+- [x] `CHANGELOG.md`
+- [ ] Tag `v0.1.0` and verify a clean install: `go install`, `init`, `run`
+      with no local `replace`
+
 ## Phase 4 - Contract level (schema-driven)
 
 The first non-E2E level. See [design-test-levels.md](active/design-test-levels.md).

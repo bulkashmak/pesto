@@ -11,13 +11,12 @@ import (
 	"github.com/bulkashmak/pesto/internal/cli"
 	"github.com/bulkashmak/pesto/internal/cli/commands"
 	"github.com/bulkashmak/pesto/internal/cli/handlers"
+	"github.com/bulkashmak/pesto/internal/version"
 )
-
-const version = "0.0.0-dev"
 
 func main() {
 	state := &cli.State{
-		Version: version,
+		Version: version.Current(),
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
 	}

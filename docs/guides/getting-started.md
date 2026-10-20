@@ -9,11 +9,11 @@ what is planned.
 The `pesto` command is a normal Go binary installed from the `cmd/pesto` package:
 
 ```bash
-go install github.com/bulkashmak/pesto/cmd/pesto@latest
+go install github.com/bulkashmak/pesto/cmd/pesto@latest   # or @v0.1.0 for a fixed version
+pesto version
 ```
 
-> Pre-release note: until the first tagged release exists, install from a checkout:
-> `git clone https://github.com/bulkashmak/pesto && cd pesto && go install ./cmd/pesto`
+Pesto needs Go 1.24 or newer.
 
 The runtime library (`github.com/bulkashmak/pesto`) is a separate, importable Go
 package - your test project depends on it, but it is not installed as a binary.
@@ -29,11 +29,15 @@ This writes a complete, opinionated layout: `pesto.yaml`, `environments/`,
 `tests/e2e/example/`, `clients/`, `fixtures/`, `helpers/`, `reports/`, plus a
 `go.mod` and a runnable example test.
 
-Resolve the runtime dependency the way the printed next-steps suggest:
+The generated `go.mod` requires the runtime library at the same version as your
+CLI, so the two always match. Download it the way the printed next-steps suggest:
 
 ```bash
-go get github.com/bulkashmak/pesto@latest
+go mod tidy
 ```
+
+(A CLI built from a source checkout has no release version; its next-steps say
+`go get github.com/bulkashmak/pesto@latest` instead.)
 
 ## 3. Run it
 

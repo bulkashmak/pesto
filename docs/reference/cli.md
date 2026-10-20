@@ -34,8 +34,10 @@ overwrite existing files.
 | --- | --- | --- |
 | `--module <path>` | the project dir name | Go module path written to `go.mod` |
 
-After init, resolve the runtime dependency with
-`go get github.com/bulkashmak/pesto@latest`.
+The generated `go.mod` requires the runtime library at the CLI's own version
+(e.g. `v0.1.0`), so after init `go mod tidy` downloads it. A CLI built from a
+source checkout has no release version: it writes a `v0.0.0` placeholder and its
+next-steps say `go get github.com/bulkashmak/pesto@latest` instead.
 
 ## `pesto run [flags] [go test args...]`
 
@@ -78,7 +80,16 @@ Notes:
 
 ## `pesto version`
 
-Prints the CLI version.
+Prints the CLI version: the release tag for `go install .../cmd/pesto@<version>`,
+a pseudo-version (possibly `+dirty`) for a local build, or `devel` for `go run`.
+
+## Version matching
+
+The CLI generates code against the runtime library, so the two should be the same
+release. `pesto run` prints a warning (and still runs) when a released CLI drives
+a project whose `go.mod` requires a different runtime version, with the commands
+to align them. Development builds and projects that `replace` the runtime with a
+local checkout are not checked.
 
 ## `pesto generate <kind> <name>`
 

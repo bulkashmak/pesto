@@ -199,3 +199,57 @@ func TestHandlersRejectInvalidRoot(t *testing.T) {
 		}
 	}
 }
+
+func TestHandleInitPinsReleaseVersion(t *testing.T) {
+	for _, c := range []struct {
+		cliVersion, wantRequire, wantStep string
+	}{
+		{"v0.1.0", "github.com/bulkashmak/pesto v0.1.0", "go mod tidy"},
+		{"devel", "github.com/bulkashmak/pesto v0.0.0", "go get github.com/bulkashmak/pesto@latest"},
+		{"v0.0.0-20261020120000-64fef63abcde+dirty", "github.com/bulkashmak/pesto v0.0.0", "go get"},
+	} {
+		dir := filepath.Join(t.TempDir(), "demo")
+		s, out := newState()
+		s.Version = c.cliVersion
+		if err := HandleInit(s, commands.Command{Name: "init", Args: []string{dir}}); err != nil {
+			t.Fatal(err)
+		}
+		gomod, err := os.ReadFile(filepath.Join(dir, "go.mod"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(gomod), "require "+c.wantRequire) {
+			t.Errorf("CLI %s: go.mod missing %q:\n%s", c.cliVersion, c.wantRequire, gomod)
+		}
+		if !strings.Contains(out.String(), c.wantStep) {
+			t.Errorf("CLI %s: next steps missing %q:\n%s", c.cliVersion, c.wantStep, out.String())
+		}
+	}
+}
+
+func TestWarnVersionMismatch(t *testing.T) {
+	cases := []struct {
+		name, cliVersion, gomod string
+		wantWarning             bool
+	}{
+		{"mismatch", "v0.2.0", "require github.com/bulkashmak/pesto v0.1.0\n", true},
+		{"match", "v0.1.0", "require github.com/bulkashmak/pesto v0.1.0\n", false},
+		{"dev CLI", "devel", "require github.com/bulkashmak/pesto v0.1.0\n", false},
+		{"local runtime", "v0.2.0", "require github.com/bulkashmak/pesto v0.1.0\nreplace github.com/bulkashmak/pesto => ../pesto\n", false},
+		{"runtime not required", "v0.2.0", "", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			root := t.TempDir()
+			if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/p\n\ngo 1.24\n\n"+c.gomod), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			s, out := newState()
+			s.Version = c.cliVersion
+			warnVersionMismatch(s, root)
+			if got := strings.Contains(out.String(), "warning"); got != c.wantWarning {
+				t.Errorf("warning = %v, want %v; output: %q", got, c.wantWarning, out.String())
+			}
+		})
+	}
+}

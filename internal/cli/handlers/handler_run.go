@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/bulkashmak/pesto"
@@ -8,6 +9,8 @@ import (
 	"github.com/bulkashmak/pesto/internal/cli/commands"
 	"github.com/bulkashmak/pesto/internal/project"
 	"github.com/bulkashmak/pesto/internal/runner"
+	"github.com/bulkashmak/pesto/internal/transform"
+	"github.com/bulkashmak/pesto/internal/version"
 )
 
 // HandleRun transforms *pesto.T tests and drives `go test`. A failing test run
@@ -34,6 +37,8 @@ func HandleRun(s *cli.State, cmd commands.Command) error {
 	} else if err := project.Check(cfg.root); err != nil {
 		return err
 	}
+
+	warnVersionMismatch(s, cfg.root)
 
 	// Resolve the environment name: explicit flag, else pesto.yaml's default_env.
 	if cfg.env == "" {
@@ -66,6 +71,24 @@ func HandleRun(s *cli.State, cmd commands.Command) error {
 		return &commands.ExitError{Code: code}
 	}
 	return nil
+}
+
+// warnVersionMismatch tells the user when a released CLI drives a project
+// built against a different runtime release: the transform generates code
+// against the runtime API, so the two should move together. It only warns -
+// a newer CLI usually still handles an older runtime - and stays quiet for
+// development builds and replaced (local) runtimes, where versions mean nothing.
+func warnVersionMismatch(s *cli.State, root string) {
+	if !version.IsRelease(s.Version) {
+		return
+	}
+	req, err := project.ModuleRequirement(root, transform.RuntimeImportPath)
+	if err != nil || req.Replaced || req.Version == "" || req.Version == s.Version {
+		return
+	}
+	fmt.Fprintf(s.Stderr, "pesto: warning: this CLI is %[1]s but the project requires %[2]s %[3]s;\n"+
+		"  align them with `go get %[2]s@%[1]s` or `go install %[2]s/cmd/pesto@%[3]s`\n",
+		s.Version, transform.RuntimeImportPath, req.Version)
 }
 
 // runConfig holds pesto's own `run` flags, separated from go test passthrough.
