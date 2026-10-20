@@ -142,6 +142,6 @@ Open questions:
   a project imports? Must they match?
 - **Relationship to raw `go test`.** Authored tests use a `*pesto.T` signature, so
   `pesto run` is **required** - it runs a codegen/transform step first (see
-  [design-test-context.md](design-test-context.md)). Bare `go test` will not run a
+  [design-test-context.md](../shipped/design-test-context.md)). Bare `go test` will not run a
   Pesto project. Open question: should the generated `*testing.T` wrappers be left
   on disk (so a curious user *can* inspect/run them) or produced in a temp dir?

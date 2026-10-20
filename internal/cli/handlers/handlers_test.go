@@ -93,7 +93,7 @@ func TestHandleInit(t *testing.T) {
 
 func TestHandleGenerate(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/p\n\ngo 1.22\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/p\n\ngo 1.24\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -114,6 +114,11 @@ func TestHandleGenerate(t *testing.T) {
 	}
 	if err := HandleGenerate(s, commands.Command{Name: "generate", Args: []string{"e2e"}}); !isUsageErr(err) {
 		t.Fatalf("missing name: want usage error, got %v", err)
+	}
+	for _, bad := range []string{"9bad/x", "a/b/c"} {
+		if err := HandleGenerate(s, commands.Command{Name: "generate", Args: []string{"e2e", bad, "--root", root}}); !isUsageErr(err) {
+			t.Errorf("invalid name %q: want usage error, got %v", bad, err)
+		}
 	}
 }
 

@@ -34,7 +34,7 @@ So "parallel by default" cannot come from a stdlib switch. It has to be applied.
 ## The decision: dynamic injection at transform time
 
 Pesto already transforms authored tests into standard Go tests before handing them
-to `go test` (see [design-test-context.md](design-test-context.md)). That transform
+to `go test` (see [design-test-context.md](../shipped/design-test-context.md)). That transform
 is the injection point. The QA engineer never writes `t.Parallel()`; Pesto adds or
 omits it based on a single **parallel option**.
 
@@ -107,7 +107,7 @@ parallelism.
 
 ## Cross-references
 
-- [design-test-context.md](design-test-context.md) - the transform that injects
+- [design-test-context.md](../shipped/design-test-context.md) - the transform that injects
   the parallel/isolation code
 - [design-fixtures.md](design-fixtures.md) - the isolation that makes parallel safe
 - [design-cli.md](design-cli.md) - how the parallel option is exposed

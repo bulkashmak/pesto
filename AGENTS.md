@@ -22,7 +22,10 @@ progress is [docs/design/roadmap.md](docs/design/roadmap.md).
 ## Module & toolchain
 
 - Module path: `github.com/bulkashmak/pesto`
-- Minimum Go: 1.22 (relies on per-iteration loop variables for parallel subtests)
+- Minimum Go: 1.24. `pesto run` needs it: before 1.24, the `vet` step of
+  `go test` ignores `-overlay` for the injected `pesto_generated_test.go` and
+  fails every package. (Per-iteration loop variables, needed for parallel
+  subtests, arrived in 1.22.)
 - Dependencies: only `gopkg.in/yaml.v3` (config parsing). Keep the dependency
   footprint minimal - especially for the runtime library.
 
@@ -86,7 +89,7 @@ via `go test -overlay` - it never edits files on disk:
 
 `pesto.Run` builds the `*pesto.T`, resolving the selected environment once per binary
 from the `PESTO_ENV` / `PESTO_ROOT` process variables that `pesto run` sets. Full
-rationale: [docs/design/active/design-test-context.md](docs/design/active/design-test-context.md).
+rationale: [docs/design/shipped/design-test-context.md](docs/design/shipped/design-test-context.md).
 
 ## Build / test / run
 

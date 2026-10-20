@@ -9,7 +9,7 @@
 - [x] `docs/` overview, architecture, concepts
 - [ ] `docs/design/active/` design notes for the open questions (in progress)
 - [x] Decide module path and minimum Go version
-      (`github.com/bulkashmak/pesto`, Go 1.22+)
+      (`github.com/bulkashmak/pesto`, Go 1.24+)
 
 ## Phase 1 - Runtime core (the library)
 
@@ -32,7 +32,7 @@ The smallest thing that lets someone write a Pesto test by hand, no CLI yet.
 - [x] `pesto init <name>` - scaffold the full project layout (runnable example)
 - [x] **Transform step** - rewrite `func TestX(t *pesto.T)` into standard
       `*testing.T` wrappers via `go test -overlay` + AST rewrite
-      (see [design-test-context.md](active/design-test-context.md))
+      (see [design-test-context.md](shipped/design-test-context.md))
 - [x] `pesto run --env <e>` - resolve config, transform, drive `go test`, exit codes
 - [x] JUnit XML report output (the CI-standard XML schema, not the JUnit tool)
       via `pesto run --report junit [--out <path>]`

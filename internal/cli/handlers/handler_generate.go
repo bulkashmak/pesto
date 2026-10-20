@@ -50,6 +50,9 @@ func HandleGenerate(s *cli.State, cmd commands.Command) error {
 	default:
 		return commands.Usagef("unknown generate kind %q (supported: e2e, suite, client)", kind)
 	}
+	if errors.Is(err, generate.ErrInvalidName) {
+		return &commands.UsageError{Err: err}
+	}
 	if err != nil {
 		return err
 	}

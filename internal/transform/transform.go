@@ -4,7 +4,7 @@
 // unexported body function so line numbers are preserved, and a companion wrappers
 // file is generated with the real `func TestX(t *testing.T)` that calls
 // pesto.Run. Both are fed to the compiler via `go test -overlay`; nothing on disk
-// is modified. See docs/design/active/design-test-context.md.
+// is modified. See docs/design/shipped/design-test-context.md.
 package transform
 
 import (

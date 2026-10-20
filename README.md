@@ -96,7 +96,7 @@ fixtures. See the [roadmap](docs/design/roadmap.md).
 
 - **Protocol:** REST / HTTP+JSON, first-class. gRPC and GraphQL may follow.
 - **Authoring:** Go test files, scaffolded by the Pesto CLI.
-- **Runtime:** Go 1.22+.
+- **Runtime:** Go 1.24+.
 
 ## License
 

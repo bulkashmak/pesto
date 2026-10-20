@@ -58,7 +58,7 @@ parallel/isolation transform operates on - which is why the choice of assertion
 style is **independent** of parallel execution: a test can decode to a struct and
 use stdlib assertions and still get `t.Parallel()` injected. See
 [design-parallelism.md](design-parallelism.md) and
-[design-test-context.md](design-test-context.md).
+[design-test-context.md](../shipped/design-test-context.md).
 
 ## Open questions
 

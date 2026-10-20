@@ -1,6 +1,6 @@
 module example.com/basic
 
-go 1.22
+go 1.24
 
 require github.com/bulkashmak/pesto v0.0.0
 

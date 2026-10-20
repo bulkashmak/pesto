@@ -6,6 +6,7 @@ package generate
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -19,13 +20,29 @@ import (
 // segmentRE is what every normalized name segment must match.
 var segmentRE = regexp.MustCompile(`^[a-z][a-z0-9_]*$`)
 
+// ErrInvalidName matches (via errors.Is) every error caused by a malformed name
+// argument, so callers can report it as a usage mistake.
+var ErrInvalidName = errors.New("invalid name")
+
+// nameError is a malformed-name error that keeps its own message while still
+// matching ErrInvalidName.
+type nameError struct{ msg string }
+
+func (e *nameError) Error() string { return e.msg }
+
+func (e *nameError) Is(target error) bool { return target == ErrInvalidName }
+
+func invalidName(format string, args ...any) error {
+	return &nameError{msg: fmt.Sprintf(format, args...)}
+}
+
 // E2E scaffolds tests/e2e/<domain>/<name>_test.go for an argument of the form
 // "<domain>/<name>". A domain that does not exist yet is created first, as if by
 // [Suite]. It returns the paths of the files it created.
 func E2E(root, arg string) ([]string, error) {
 	segs := strings.Split(arg, "/")
 	if len(segs) != 2 {
-		return nil, fmt.Errorf("generate e2e needs exactly <domain>/<name>, got %q", arg)
+		return nil, invalidName("generate e2e needs exactly <domain>/<name>, got %q", arg)
 	}
 	domain, err := normalize(segs[0])
 	if err != nil {
@@ -108,7 +125,7 @@ func normalize(seg string) (string, error) {
 	s = strings.ReplaceAll(s, "-", "_")
 	s = strings.ReplaceAll(s, " ", "_")
 	if !segmentRE.MatchString(s) {
-		return "", fmt.Errorf("invalid name %q: %q must match [a-z][a-z0-9_]*", seg, s)
+		return "", invalidName("invalid name %q: %q must match [a-z][a-z0-9_]*", seg, s)
 	}
 	return s, nil
 }

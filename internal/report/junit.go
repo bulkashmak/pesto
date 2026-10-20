@@ -35,11 +35,11 @@ type Suite struct {
 
 // Case is one <testcase> (a Go test or subtest).
 type Case struct {
-	Name      string   `xml:"name,attr"`
-	Classname string   `xml:"classname,attr"`
-	Time      string   `xml:"time,attr"`
-	Failure   *Message `xml:"failure,omitempty"`
-	Error     *Message `xml:"error,omitempty"`
+	Name      string    `xml:"name,attr"`
+	Classname string    `xml:"classname,attr"`
+	Time      string    `xml:"time,attr"`
+	Failure   *Message  `xml:"failure,omitempty"`
+	Error     *Message  `xml:"error,omitempty"`
 	Skipped   *struct{} `xml:"skipped,omitempty"`
 }
 

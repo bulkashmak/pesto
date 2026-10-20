@@ -1,15 +1,18 @@
 # Design note: test context & the transform
 
-- **Status:** active
+- **Status:** shipped
 - **Owner:** bulat
-- **Promoted to:** —
+- **Promoted to:** docs/architecture.md (the transform), docs/concepts.md#pestot---the-test-context
 
 > Direction: authoring model decided; **mechanism decided** (overlay + AST rewrite,
 > see below).
 >
 > **Implemented (Phase 2):** `pesto.Run`, `internal/transform`, and the overlay-based
-> `pesto run` are built and transform `*pesto.T` tests end to end. Remaining scope
-> on `pesto.T` itself (`t.Env`, `t.Fixtures`) is still open.
+> `pesto run` are built and transform `*pesto.T` tests end to end.
+>
+> **Shipped.** The remaining `pesto.T` accessors are tracked elsewhere: `t.Env`
+> (environment `variables`) with the Phase 4 setup primitive and `t.Fixtures` in
+> Phase 5 - both in [design-fixtures.md](../active/design-fixtures.md).
 
 ## Decision
 
@@ -100,5 +103,5 @@ call.
 
 ## Related
 
-- Entry point and flags: [design-cli.md](design-cli.md)
+- Entry point and flags: [design-cli.md](../active/design-cli.md)
 - Build order: [roadmap.md](../roadmap.md) (transform lands in Phase 2)

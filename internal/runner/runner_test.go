@@ -177,7 +177,7 @@ func TestRunSymlinkedWorkingDirectory(t *testing.T) {
 // "no packages to test", when run from a folder with no tests below it.
 func TestRunSubdirectoryWithoutTests(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/p\n\ngo 1.22\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/p\n\ngo 1.24\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	empty := filepath.Join(root, "reports")

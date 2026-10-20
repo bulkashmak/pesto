@@ -93,7 +93,7 @@ func render(tmpl string, data map[string]string) ([]byte, error) {
 
 const goModTmpl = `module {{.Module}}
 
-go 1.22
+go 1.24
 
 require {{.RuntimePath}} {{.PestoVersion}}
 `

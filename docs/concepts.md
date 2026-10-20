@@ -85,7 +85,7 @@ Because it embeds `*testing.T`, anything you can do in a standard Go test still
 works. The `*pesto.T` signature is not discoverable by bare `go test`, so tests
 are launched with `pesto run`, which transforms them into standard `*testing.T`
 tests before compiling - see
-[`design/active/design-test-context.md`](design/active/design-test-context.md).
+[`design/shipped/design-test-context.md`](design/shipped/design-test-context.md).
 
 ## Client - the fluent HTTP layer
 

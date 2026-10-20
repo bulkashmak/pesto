@@ -162,7 +162,7 @@ Remaining open:
   interprets at run time**, or does `pesto generate` emit a **Go test** from the
   schema? Interpreted = less code, schema is the source of truth; generated =
   visible, debuggable, editable Go. Possibly: schema is source of truth, transform
-  produces the test (consistent with [design-test-context.md](design-test-context.md)).
+  produces the test (consistent with [design-test-context.md](../shipped/design-test-context.md)).
 
 ### Naming & disambiguation
 
