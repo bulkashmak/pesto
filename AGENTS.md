@@ -36,10 +36,21 @@ The single most important structural rule:
   and imports nothing from `cmd/` or `internal/`. A test project that imports it
   must not pull in CLI code. Keep this root small and public.
 - **The CLI is `cmd/pesto`** (`package main`), installable via
-  `go install github.com/bulkashmak/pesto/cmd/pesto@latest`.
-- **CLI implementation lives under `internal/`** (compiler-private): `transform`,
-  `runner`, `report`, `scaffold`, `generate`. All new CLI-only logic goes here,
-  never in the root.
+  `go install github.com/bulkashmak/pesto/cmd/pesto@latest`. `main.go` only wires:
+  it builds the `cli.State`, registers every command in the registry, and maps
+  the returned error to an exit code.
+- **CLI implementation lives under `internal/`** (compiler-private). The command
+  layer is `internal/cli` (`State`), `internal/cli/commands` (the registry) and
+  `internal/cli/handlers` (one `handler_<name>.go` per command). Handlers stay
+  thin and call the engines: `transform`, `runner`, `report`, `scaffold`,
+  `generate`. All new CLI-only logic goes here, never in the root.
+
+Adding a command: write `internal/cli/handlers/handler_<name>.go` with
+`func Handle<Name>(s *cli.State, cmd commands.Command) error`, then register it
+in `cmd/pesto/main.go` with its usage and description (help is generated from
+the registry). Write output to `s.Stdout`/`s.Stderr`, never `os.Stdout`; return
+`commands.Usagef(...)` for bad invocations (exit 2) and
+`&commands.ExitError{Code: n}` to propagate a specific exit code.
 
 Dependency arrow points one way only: `cmd/pesto → root + internal/*`; the root
 depends on neither. Preserve this when adding code.
@@ -49,7 +60,10 @@ depends on neither. Preserve this when adding code.
 | Path | Role |
 | --- | --- |
 | `.` (`package pesto`) | runtime library: `T`, `New`, `Run`, `Client`, `Response`, `Expect`, `Decode`, `Config`/`Environment`, `Auth` |
-| `cmd/pesto` | CLI entry point (`init`, `run`, `version`) |
+| `cmd/pesto` | CLI entry point: wires `State` + registry, maps errors to exit codes |
+| `internal/cli` | `State` shared by every command handler (version, stdout/stderr) |
+| `internal/cli/commands` | command registry (`Register`/`Run`), `UsageError`, `ExitError` |
+| `internal/cli/handlers` | one handler per command: `init`, `generate`, `run`, `version`, `help` |
 | `internal/transform` | AST rewrite: `func TestX(t *pesto.T)` → body rename + generated `*testing.T` wrappers |
 | `internal/runner` | builds the `go test -overlay` map and drives `go test` (incl. `--report`) |
 | `internal/report` | `go test -json` → JUnit XML |

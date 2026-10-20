@@ -78,8 +78,11 @@ pesto/                        module github.com/bulkashmak/pesto
 ├── doc.go
 ├── cmd/
 │   └── pesto/
-│       └── main.go           # the `pesto` CLI binary (go install .../cmd/pesto)
+│       └── main.go           # the `pesto` CLI binary: registers commands, sets exit codes
 ├── internal/                 # private implementation - not importable by users
+│   ├── cli/                  #   command layer: State shared by handlers
+│   │   ├── commands/         #     command registry (Register/Run) + error kinds
+│   │   └── handlers/         #     one handler_<name>.go per CLI command
 │   ├── transform/            #   *pesto.T → *testing.T rewrite
 │   ├── runner/               #   overlay build + `go test` driver
 │   ├── report/               #   go test -json → JUnit XML

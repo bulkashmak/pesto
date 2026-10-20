@@ -13,6 +13,14 @@ carries the "Django-like codegen" and "Vue-like structure" goals.
 > **Implemented (Phase 3):** `pesto generate e2e|suite|client` per the decided
 > rules below (`internal/generate`). See [reference/cli.md](../../reference/cli.md)
 > for the shipped surface. `pesto generate contract` comes with Phase 4.
+>
+> **Implemented (CLI structure):** the command layer follows a registry
+> pattern (borrowed from the author's gator-cli/pokedex-cli): `internal/cli`
+> holds the `State` passed to every handler, `internal/cli/commands` the registry
+> (`Register(Entry)` / `Run`), and `internal/cli/handlers` one
+> `handler_<name>.go` per command. `cmd/pesto/main.go` only wires them and maps
+> errors to exit codes (`UsageError` → 2, `ExitError` → its code, else 1). Help
+> is generated from the registered entries. Stdlib only - no CLI framework.
 
 ## Intended commands
 
