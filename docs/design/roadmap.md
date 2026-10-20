@@ -60,8 +60,8 @@ The first tagged release: Phases 1-3 installable with `go install ...@v0.1.0`.
 - [x] `pesto init` pins the runtime to the CLI's version
 - [x] `pesto run` warns on a CLI/runtime version mismatch
 - [x] `CHANGELOG.md`
-- [ ] Tag `v0.1.0` and verify a clean install: `go install`, `init`, `run`
-      with no local `replace`
+- [x] Tag `v0.1.0` and verify a clean install: `go install`, `init`, `run`
+      with no local `replace` (verified from proxy.golang.org on 2026-10-20)
 
 ## Phase 4 - Contract level (schema-driven)
 

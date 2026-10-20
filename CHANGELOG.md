@@ -3,7 +3,7 @@
 All notable changes to Pesto. The CLI (`cmd/pesto`) and the runtime library
 (`github.com/bulkashmak/pesto`) are released together under one version.
 
-## v0.1.0 - unreleased
+## v0.1.0 - 2026-10-20
 
 First release: write, scaffold, and run black-box API tests.
 
