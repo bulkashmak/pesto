@@ -88,6 +88,15 @@ The first non-E2E level. See [design-test-levels.md](active/design-test-levels.m
 **Done when:** a schema under `tests/contract/users/post/` produces passing
 happy-path + violation checks via `pesto run`.
 
+## Release v0.2.0
+
+REST contract tests and static test data, installable with
+`go install ...@v0.2.0`. OpenAPI seeding is not in it.
+
+- [x] `CHANGELOG.md` entry
+- [ ] Tag `v0.2.0` and verify a clean install: `go install`, `init`, `run`,
+      `generate contract` with no local `replace`
+
 ## Phase 5 - Fixtures & data
 
 - [ ] Fixture lifecycle (setup/teardown, isolation) - see
