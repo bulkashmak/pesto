@@ -15,7 +15,7 @@ import (
 )
 
 // TestGeneratedFilesCompile scaffolds a project, generates a suite, an E2E test,
-// and a client stub, and drives the project through pesto run with -run '^$' so
+// a client stub, and a contract, and drives the project through pesto run with -run '^$' so
 // everything is transformed and compiled without hitting the network. This proves
 // the generate templates produce code that builds end to end.
 func TestGeneratedFilesCompile(t *testing.T) {
@@ -30,6 +30,9 @@ func TestGeneratedFilesCompile(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := generate.Client(dir, "users"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := generate.Contract(dir, "POST", "/users/{id}/cards"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -58,8 +61,10 @@ func TestGeneratedFilesCompile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit = %d, want 0 (generated files should compile)\n%s", code, combined)
 	}
-	if !strings.Contains(combined, "example.com/acme/tests/e2e/transfer") {
-		t.Errorf("expected the generated package to build:\n%s", combined)
+	for _, pkg := range []string{"example.com/acme/tests/e2e/transfer", "example.com/acme/tests/contract/users/by_id/cards/post"} {
+		if !strings.Contains(combined, pkg) {
+			t.Errorf("expected %s to build:\n%s", pkg, combined)
+		}
 	}
 }
 

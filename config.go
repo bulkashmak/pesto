@@ -24,10 +24,12 @@ type Config struct {
 	EnvironmentsDir string `yaml:"environments_dir"`
 }
 
-// Environment is a single resolved environment (e.g. dev, staging), read from
-// <environments_dir>/<name>.yaml.
+// Environment is a single resolved environment (e.g. dev, staging). It is read
+// from <environments_dir>/<name>/env.yaml, with the environment's static test
+// data in <environments_dir>/<name>/data/*.yaml; or from a single
+// <environments_dir>/<name>.yaml for an environment with no data.
 type Environment struct {
-	// Name is the environment name (the file's base name).
+	// Name is the environment name (the folder's or file's base name).
 	Name string `yaml:"-"`
 	// BaseURL is the API base URL that request paths resolve against.
 	BaseURL string `yaml:"base_url"`
@@ -35,10 +37,9 @@ type Environment struct {
 	Auth *AuthConfig `yaml:"auth"`
 	// Headers are default headers sent on every request.
 	Headers map[string]string `yaml:"headers"`
-	// Variables are arbitrary values a test can reference (base data, IDs, ...).
-	Variables map[string]string `yaml:"variables"`
 
-	auth Auth // resolved from Auth during loading
+	auth Auth    // resolved from Auth during loading
+	data dataSet // the data/ folder, read with [T.Data]
 }
 
 // AuthConfig is the serialized form of an environment's authentication.
@@ -108,7 +109,10 @@ func LoadEnvironment(root, name string) (*Environment, error) {
 		envDir = defaultEnvironmentsDir
 	}
 
-	path := filepath.Join(root, envDir, name+".yaml")
+	path, folder, err := environmentFile(root, envDir, name)
+	if err != nil {
+		return nil, err
+	}
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read environment %q (%s): %w", name, path, err)
@@ -129,7 +133,42 @@ func LoadEnvironment(root, name string) (*Environment, error) {
 		env.auth = a
 	}
 
+	env.data = dataSet{files: map[string]any{}}
+	if folder {
+		display := filepath.Join(envDir, name, dataDirName)
+		if env.data, err = loadData(filepath.Join(root, display), display); err != nil {
+			return nil, fmt.Errorf("environment %q: %w", name, err)
+		}
+	}
+
 	return &env, nil
+}
+
+// environmentFile finds the file defining environment name: the folder form
+// <envDir>/<name>/env.yaml (folder is true) or the flat <envDir>/<name>.yaml.
+// Defining an environment both ways is an error, so neither silently wins.
+func environmentFile(root, envDir, name string) (path string, folder bool, err error) {
+	flat := filepath.Join(root, envDir, name+".yaml")
+	dir := filepath.Join(root, envDir, name)
+
+	_, flatErr := os.Stat(flat)
+	info, dirErr := os.Stat(dir)
+	hasFlat, hasDir := flatErr == nil, dirErr == nil && info.IsDir()
+
+	switch {
+	case hasFlat && hasDir:
+		return "", false, fmt.Errorf("environment %q is defined twice, as %s and %s%c: keep one", name, flat, dir, filepath.Separator)
+	case hasDir:
+		path := filepath.Join(dir, "env.yaml")
+		if _, err := os.Stat(path); err != nil {
+			return "", false, fmt.Errorf("environment %q: folder %s has no env.yaml", name, dir)
+		}
+		return path, true, nil
+	case hasFlat:
+		return flat, false, nil
+	default:
+		return "", false, fmt.Errorf("environment %q not found: want %s%cenv.yaml or %s", name, dir, filepath.Separator, flat)
+	}
 }
 
 // expandVars applies ${VAR}/$VAR expansion to string fields.
@@ -143,13 +182,10 @@ func (e *Environment) expandVars() {
 	for k, v := range e.Headers {
 		e.Headers[k] = os.ExpandEnv(v)
 	}
-	for k, v := range e.Variables {
-		e.Variables[k] = os.ExpandEnv(v)
-	}
 }
 
 // WithEnvironment configures a [T] from a resolved [Environment]: base URL,
-// default headers, and authentication.
+// default headers, authentication, and static test data (read with [T.Data]).
 func WithEnvironment(env *Environment) Option {
 	return func(c *config) {
 		if env.BaseURL != "" {
@@ -160,6 +196,12 @@ func WithEnvironment(env *Environment) Option {
 		}
 		if env.auth != nil {
 			c.auth = env.auth
+		}
+		if env.data.dir != "" {
+			c.data.dir = env.data.dir
+		}
+		for k, v := range env.data.files {
+			c.data.files[k] = v
 		}
 	}
 }

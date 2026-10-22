@@ -76,6 +76,8 @@ pesto/                        module github.com/bulkashmak/pesto
 ├── response.go               #   test author imports. Kept small and public.
 ├── expect.go
 ├── doc.go
+├── contract/                 # public contract engine: contract.Run, imported by
+│                             #   generated contract tests (adds the JSON Schema validator)
 ├── cmd/
 │   └── pesto/
 │       └── main.go           # the `pesto` CLI binary: registers commands, sets exit codes
@@ -115,15 +117,20 @@ acme-api-tests/
 ├── pesto.yaml              # project config: default env, conventions
 ├── go.mod
 ├── environments/
-│   ├── dev.yaml            # base URL, auth, variables per environment
-│   └── test.yaml
+│   ├── dev/
+│   │   ├── env.yaml        # base URL, auth
+│   │   └── data/           # static test data that exists in dev
+│   │       └── todos.yaml
+│   └── test/
 ├── clients/                # typed API clients (hand-written or generated)
 │   └── users.go
 ├── tests/                  # test cases, split by LEVEL (a core concept)
 │   ├── contract/           # schema-driven, mirrors the API surface
 │   │   └── users/
-│   │       ├── get/        # GET /users  - schema + generated cases
-│   │       └── post/       # POST /users
+│   │       ├── get/        # GET /users  - contract.yaml + schemas + contract_test.go
+│   │       ├── post/       # POST /users
+│   │       └── by_id/
+│   │           └── get/    # GET /users/{id}
 │   └── e2e/                # classic tests, organized by feature/domain
 │       └── transfer/
 │           └── transfer_test.go
@@ -136,15 +143,16 @@ acme-api-tests/
 The layout is the same on every project. That sameness is the point: a QA
 engineer moving between two Pesto projects already knows where everything lives.
 Tests are split by **level** - `contract/` (request/response validation, mirrors
-the URL path or RPC method) and `e2e/` (business logic, organized by domain). See
+the URL path) and `e2e/` (business logic, organized by domain). See
 [concepts.md](concepts.md) and [`design/active/design-test-levels.md`](design/active/design-test-levels.md).
 
 ## Execution flow
 
 What happens when a QA engineer runs `pesto run --env staging`:
 
-1. **Resolve config.** The CLI reads `pesto.yaml` and `environments/staging.yaml`
-   and exposes the resolved values (base URL, auth, variables) to the runtime.
+1. **Resolve config.** The CLI reads `pesto.yaml` and `environments/staging/`
+   and exposes the resolved values (base URL, auth, static test data) to the
+   runtime.
 2. **Transform.** The CLI scans the `tests/` tree for `func TestXxx(t *pesto.T)`
    functions and generates standard `func TestXxx(t *testing.T)` wrappers that
    build the `*pesto.T` and invoke the authored body. (How this transform works -

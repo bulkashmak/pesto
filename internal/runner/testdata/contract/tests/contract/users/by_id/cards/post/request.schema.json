@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["account_id", "number", "limit"],
+  "additionalProperties": false,
+  "properties": {
+    "account_id": { "type": "integer" },
+    "number": { "type": "string", "minLength": 16, "maxLength": 16, "examples": ["4111111111111111"] },
+    "limit":  { "type": "integer", "minimum": 0, "default": 500 }
+  }
+}

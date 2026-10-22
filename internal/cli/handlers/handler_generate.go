@@ -11,18 +11,25 @@ import (
 	"github.com/bulkashmak/pesto/internal/project"
 )
 
-// HandleGenerate scaffolds a file inside an existing project:
-// `pesto generate <e2e|suite|client> <name> [--root <dir>]`. Without --root,
+// HandleGenerate scaffolds files inside an existing project:
+// `pesto generate <e2e|suite|client> <name> [--root <dir>]` or
+// `pesto generate contract <METHOD> <path> [--root <dir>]`. Without --root,
 // the project root is found by searching upward from the working directory.
 func HandleGenerate(s *cli.State, cmd commands.Command) error {
 	flags, positional, err := splitArgs(cmd.Args, "root")
 	if err != nil {
 		return err
 	}
-	if len(positional) != 2 {
+	if len(positional) == 0 {
 		return commands.Usagef("generate needs a kind and a name")
 	}
-	kind, name := positional[0], positional[1]
+	kind, args := positional[0], positional[1:]
+	switch {
+	case kind == "contract" && len(args) != 2:
+		return commands.Usagef("generate contract needs a method and a path, e.g. generate contract POST /users/{id}/cards")
+	case kind != "contract" && len(args) != 1:
+		return commands.Usagef("generate needs a kind and a name")
+	}
 
 	workDir, err := s.Dir()
 	if err != nil {
@@ -40,15 +47,15 @@ func HandleGenerate(s *cli.State, cmd commands.Command) error {
 	var created []string
 	switch kind {
 	case "e2e":
-		created, err = generate.E2E(root, name)
+		created, err = generate.E2E(root, args[0])
 	case "suite":
-		created, err = generate.Suite(root, name)
+		created, err = generate.Suite(root, args[0])
 	case "client":
-		created, err = generate.Client(root, name)
+		created, err = generate.Client(root, args[0])
 	case "contract":
-		return errors.New("generate contract is planned (Phase 4); see docs/design/roadmap.md")
+		created, err = generate.Contract(root, args[0], args[1])
 	default:
-		return commands.Usagef("unknown generate kind %q (supported: e2e, suite, client)", kind)
+		return commands.Usagef("unknown generate kind %q (supported: e2e, suite, client, contract)", kind)
 	}
 	if errors.Is(err, generate.ErrInvalidName) {
 		return &commands.UsageError{Err: err}

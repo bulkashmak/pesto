@@ -6,9 +6,9 @@ _planned_ are on the [roadmap](../design/roadmap.md).
 ```
 pesto init <name> [--module <path>]
 pesto generate <e2e|suite|client> <name> [--root <dir>]
+pesto generate contract <METHOD> <path> [--root <dir>]
 pesto run [flags] [go test args...]
 pesto version
-pesto generate contract ...        # planned (Phase 4)
 ```
 
 ## Project root
@@ -119,5 +119,30 @@ pesto generate suite billing             # tests/e2e/billing/suite_test.go
 pesto generate client users              # clients/users/users.go
 ```
 
-`generate contract` (schema-driven contract tests) is planned for Phase 4 - see
-the [roadmap](../design/roadmap.md).
+## `pesto generate contract <METHOD> <path>`
+
+Scaffolds a schema-driven contract for one REST operation. `<METHOD>` is GET,
+POST, PUT, PATCH or DELETE (any case); `<path>` starts with `/` and may contain
+`{param}` segments. The folder mirrors the path: each literal segment is
+normalized like a name, each `{param}` becomes `by_<param>`, and the lower-cased
+method is the last folder (and the Go package name).
+
+| Command | Creates in |
+| --- | --- |
+| `generate contract GET /users` | `tests/contract/users/get/` |
+| `generate contract POST /users/{id}/cards` | `tests/contract/users/by_id/cards/post/` |
+| `generate contract DELETE /credit-cards/{cardId}` | `tests/contract/credit_cards/by_cardid/delete/` |
+
+Files created:
+
+- `contract.yaml` - the envelope: method, path, statuses, and a `path_params`
+  entry per `{param}` naming the [static data](config.md#static-test-data)
+  reference that supplies it (`{id}` after `users` → `users.default.id`);
+- `request.schema.json` - for POST, PUT and PATCH: a starter JSON Schema to edit;
+- `response.schema.json` - for all but DELETE: the success body schema;
+- `contract_test.go` - `func TestContract(t *pesto.T)` calling `contract.Run`.
+
+Nothing is written if any of these files exists. The input is arguments only, so
+the command works the same in a script or CI. Quote the path if your shell
+treats braces specially. The envelope format and the derived cases are in the
+[contract reference](contract.md).

@@ -3,6 +3,44 @@
 All notable changes to Pesto. The CLI (`cmd/pesto`) and the runtime library
 (`github.com/bulkashmak/pesto`) are released together under one version.
 
+## Unreleased
+
+REST contract tests: describe an endpoint with JSON Schema and let Pesto derive
+the valid request and one negative case per schema violation.
+
+### Runtime library
+
+- New `contract` package: `contract.Run(t, "contract.yaml")` runs a contract's
+  `happy_path` and `violation/<kind>/<field>` cases. Adds the
+  `santhosh-tekuri/jsonschema/v6` dependency, compiled only by projects that
+  import `contract`.
+- `T.Run(name, func(*pesto.T))`: subtests that keep the client configuration.
+  **Changed:** this shadows `testing.T.Run`; a subtest written as
+  `t.Run(name, func(t *testing.T) {...})` must become `t.T.Run(...)`.
+- Static test data: an environment can be a folder,
+  `environments/<env>/env.yaml` plus `environments/<env>/data/*.yaml` of named
+  records. `T.Data("users.default.id")` reads a value (fatal when missing),
+  `T.LookupData` is the comma-ok form, and `WithData` sets data in code. The
+  flat `environments/<env>.yaml` still works, as an environment with no data.
+- **Removed:** the `variables` environment key (it was parsed in v0.1.0 but
+  nothing could read it; an old file still loads). Contract `path_params` now
+  name data references.
+- Contract `request.data`: fills request body fields from static data
+  (`account_id: accounts.default.id`), converted to each field's schema type.
+  Violations are derived from the filled body.
+- `Client.Do(method, path)` starts a request with any method.
+
+### CLI
+
+- `pesto generate contract <METHOD> <path>`: scaffolds `contract.yaml`, request
+  and response schemas, and `contract_test.go` under
+  `tests/contract/<path>/<method>/` (`{param}` → `by_<param>`).
+  Each `{param}` gets a data reference in `path_params` (`{id}` after `users`
+  → `users.default.id`).
+- `pesto init` scaffolds environments as folders (`environments/dev/env.yaml`,
+  `environments/dev/data/todos.yaml`), and the starter test reads its todo id
+  with `t.Data`.
+
 ## v0.1.0 - 2026-10-20
 
 First release: write, scaffold, and run black-box API tests.

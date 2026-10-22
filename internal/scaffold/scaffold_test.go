@@ -15,7 +15,8 @@ func TestCreateWritesExpectedLayout(t *testing.T) {
 
 	for _, rel := range []string{
 		"go.mod", "pesto.yaml", ".gitignore", "README.md",
-		"environments/dev.yaml", "environments/test.yaml",
+		"environments/dev/env.yaml", "environments/dev/data/todos.yaml",
+		"environments/test/env.yaml", "environments/test/data/todos.yaml",
 		"tests/e2e/example/example_test.go",
 		"clients/.gitkeep", "fixtures/.gitkeep", "helpers/.gitkeep", "reports/.gitkeep",
 	} {

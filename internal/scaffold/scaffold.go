@@ -39,8 +39,10 @@ var files = []file{
 	{"pesto.yaml", pestoYAMLTmpl},
 	{".gitignore", gitignoreTmpl},
 	{"README.md", readmeTmpl},
-	{"environments/dev.yaml", devEnvTmpl},
-	{"environments/test.yaml", testEnvTmpl},
+	{"environments/dev/env.yaml", devEnvTmpl},
+	{"environments/dev/data/todos.yaml", devTodosTmpl},
+	{"environments/test/env.yaml", testEnvTmpl},
+	{"environments/test/data/todos.yaml", testTodosTmpl},
 	{"tests/e2e/example/example_test.go", exampleTestTmpl},
 	{"clients/.gitkeep", ""},
 	{"fixtures/.gitkeep", ""},
@@ -103,7 +105,8 @@ const pestoYAMLTmpl = `# Pesto project configuration.
 # The environment used by ` + "`pesto run`" + ` when --env is not given.
 default_env: dev
 
-# Environment files live in environments/<name>.yaml
+# Each environment is a folder: environments/<name>/env.yaml for where and how
+# to connect, environments/<name>/data/ for the static test data that exists there.
 `
 
 const gitignoreTmpl = `# Generated test reports
@@ -120,7 +123,8 @@ A [Pesto](https://github.com/bulkashmak/pesto) black-box API test project.
 
 ## Layout
 
-    environments/   base URL + auth per environment (dev, test, ...)
+    environments/   per environment (dev, test, ...): env.yaml (base URL + auth)
+                    and data/ (static test data that exists there)
     tests/e2e/      hand-written end-to-end tests, by domain
     clients/        typed API clients
     fixtures/       reusable test data + setup/teardown
@@ -151,6 +155,21 @@ const testEnvTmpl = `# Test / staging environment. Point base_url at your own AP
 base_url: https://jsonplaceholder.typicode.com
 `
 
+// devTodosTmpl and testTodosTmpl are static test data: records that exist
+// permanently in each environment, read in tests with t.Data.
+const devTodosTmpl = `# Static test data: todos that exist permanently in the dev environment.
+# Tests read it with t.Data("todos.default.id"): file todos.yaml, record
+# default, field id. Values support ${VAR} expansion, like env.yaml.
+default:
+  id: 1
+`
+
+const testTodosTmpl = `# Static test data: todos that exist permanently in the test environment.
+# Each environment lists its own records - ids usually differ between them.
+default:
+  id: 1
+`
+
 const exampleTestTmpl = `package example
 
 import (
@@ -158,16 +177,19 @@ import (
 )
 
 // TestGetTodo is a starter Pesto test. It runs against the base_url configured in
-// environments/<env>.yaml (dev by default; see pesto.yaml). Replace it with tests
-// against your own API.
+// environments/<env>/env.yaml (dev by default; see pesto.yaml) and reads a todo
+// that exists there from environments/<env>/data/todos.yaml. Replace it with
+// tests against your own API.
 //
 // Run it with:  pesto run
 func TestGetTodo(t *pesto.T) {
-	resp := t.Client.GET("/todos/1").Send()
+	id := t.Data("todos.default.id")
+
+	resp := t.Client.GET("/todos/" + id).Send()
 
 	resp.Expect().
 		Status(200).
-		JSON("id").Equals(1).
+		JSON("id").Exists().
 		JSON("title").Exists()
 }
 `

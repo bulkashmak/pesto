@@ -122,6 +122,37 @@ func TestHandleGenerate(t *testing.T) {
 	}
 }
 
+func TestHandleGenerateContract(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example.com/p\n\ngo 1.24\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	s, out := newState()
+	err := HandleGenerate(s, commands.Command{Name: "generate", Args: []string{"contract", "POST", "/users/{id}/cards", "--root", root}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "tests", "contract", "users", "by_id", "cards", "post", "contract.yaml")); err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Count(out.String(), "created "); got != 4 {
+		t.Errorf("created %d files, want 4:\n%s", got, out.String())
+	}
+
+	for _, args := range [][]string{
+		{"contract", "POST"},
+		{"contract", "/users"},
+		{"contract", "FETCH", "/users", "--root", root},
+		{"contract", "GET", "users", "--root", root},
+		{"e2e", "a/b", "extra"},
+	} {
+		if err := HandleGenerate(s, commands.Command{Name: "generate", Args: args}); !isUsageErr(err) {
+			t.Errorf("generate %v: want usage error, got %v", args, err)
+		}
+	}
+}
+
 func TestPrintUsageListsRegisteredCommands(t *testing.T) {
 	cmds := commands.New()
 	cmds.Register(commands.Entry{Name: "init", Usage: "init <name>", Description: "scaffold", Handler: HandleInit})

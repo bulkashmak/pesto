@@ -1,0 +1,3 @@
+# Users that exist permanently in the test environment.
+default:
+  id: 42

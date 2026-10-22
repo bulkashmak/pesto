@@ -128,4 +128,39 @@ pesto run -run TestCreate -v
 the scaffolding - see the [CLI reference](../reference/cli.md) for the naming
 rules.
 
+## 7. Add a contract test
+
+A contract test checks one endpoint against a JSON Schema, with no test code to
+write:
+
+```bash
+pesto generate contract POST /users/{id}/cards
+# created tests/contract/users/by_id/cards/post/contract.yaml
+# created tests/contract/users/by_id/cards/post/contract_test.go
+# created tests/contract/users/by_id/cards/post/request.schema.json
+# created tests/contract/users/by_id/cards/post/response.schema.json
+```
+
+1. Describe the request body in `request.schema.json`, giving each required field
+   an `examples` value - Pesto builds the valid request from those.
+2. Describe the success body in `response.schema.json`.
+3. `contract.yaml` fills `{id}` from the reference `users.default.id`. Add a user
+   that exists in your dev environment to `environments/dev/data/users.yaml`:
+
+   ```yaml
+   default:
+     id: 42
+   ```
+
+4. Run it:
+
+   ```bash
+   pesto run -run TestContract -v ./tests/contract/...
+   ```
+
+Pesto sends the valid request (`happy_path`), then one request per schema
+violation (`violation/required/number`, `violation/type/limit`, ...) and expects
+the `on_violation` status for each. See the
+[contract reference](../reference/contract.md).
+
 For the building blocks, see [concepts.md](../concepts.md).

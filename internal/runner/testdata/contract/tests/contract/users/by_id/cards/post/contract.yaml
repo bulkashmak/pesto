@@ -1,0 +1,14 @@
+method: POST
+path: /users/{id}/cards
+path_params:
+  id: users.default.id
+request:
+  body: request.schema.json
+  data:
+    account_id: accounts.default.id
+response:
+  success:
+    status: 201
+    body: response.schema.json
+  on_violation:
+    status: 422

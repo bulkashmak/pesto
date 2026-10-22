@@ -6,8 +6,8 @@ together, see [architecture.md](architecture.md); to start hands-on, see
 
 Pesto is under active construction. Building blocks marked **(planned)** are
 designed but not yet implemented - see the [roadmap](design/roadmap.md). Available
-today: `pesto.T`, the `Client`, `Expect`/`Decode`, environments + auth, and the
-`init`/`run` CLI with JUnit reports.
+today: `pesto.T`, the `Client`, `Expect`/`Decode`, environments + auth, REST
+contract tests, and the `init`/`generate`/`run` CLI with JUnit reports.
 
 ## Test levels
 
@@ -17,7 +17,7 @@ structured, and how much Pesto does for you. The first two levels are **Contract
 and **E2E**. The full design - especially the schema-driven contract engine - is
 in [`design/active/design-test-levels.md`](design/active/design-test-levels.md).
 
-### Contract tests - `tests/contract/` (planned)
+### Contract tests - `tests/contract/`
 
 Contract tests validate the **request/response contract of a single endpoint** -
 shape, required vs. optional fields, data types, and field-level constraints - with
@@ -32,18 +32,24 @@ path, status) and the response expected on violation. Pesto **derives** the inva
 variants from the schema itself - a missing required field, a wrong type, an
 out-of-range or bad-format value, an unexpected extra field - so you don't list
 them by hand. From one schema it builds the happy-path request *and* those negative
-cases and checks the API responds correctly to each. If you have an OpenAPI 3.1
-spec, schemas can be seeded from it.
+cases and checks the API responds correctly to each. Happy-path values come from
+the schema's own `examples` (or `const`, `default`, `enum`) - Pesto never invents
+them. Seeding schemas from an OpenAPI 3.1 spec is **(planned)**.
 
-Contract tests **follow the API surface**. For REST they mirror the URL path; for
-RPC they mirror the method name:
+Contract tests **follow the API surface**: they mirror the URL path, with each
+`{param}` as a `by_<param>` folder and the method as the last folder.
+`pesto generate contract <METHOD> <path>` scaffolds one:
 
 ```
-GET  /users           ->  tests/contract/users/get/
-POST /users           ->  tests/contract/users/post/
-GET  /users/{id}      ->  tests/contract/users/get_by_id/
-UserService.GetUser   ->  tests/contract/userservice/getuser/
+GET    /users              ->  tests/contract/users/get/
+POST   /users              ->  tests/contract/users/post/
+GET    /users/{id}         ->  tests/contract/users/by_id/get/
+POST   /users/{id}/cards   ->  tests/contract/users/by_id/cards/post/
 ```
+
+Contract tests cover REST APIs; RPC contracts are **(planned)**. The envelope
+format and the derived cases are in the
+[contract reference](reference/contract.md).
 
 ### E2E tests - `tests/e2e/`
 
@@ -64,7 +70,7 @@ tests/e2e/onboarding/
 | Validates | request/response shape & constraints | business logic & user journeys |
 | Author writes | a schema | Go test code |
 | Requests | auto-generated from schema | hand-written |
-| Organized by | API surface (URL path / RPC method) | feature / domain |
+| Organized by | API surface (URL path) | feature / domain |
 | Folder | `tests/contract/` | `tests/e2e/` |
 
 ## `pesto.T` - the test context
@@ -75,7 +81,8 @@ everything a test needs already wired for the selected environment:
 ```go
 func TestCreateUser(t *pesto.T) {
     // t.Client   - HTTP client pointed at the current environment
-    // t.Env       - resolved environment config + variables   (planned)
+    // t.Data(ref) - static test data, e.g. t.Data("users.default.id")
+    // t.Run(name, func(t *pesto.T)) - a subtest with the same client
     // t.Fixtures  - access to fixtures / test data             (planned)
     // plus the usual t.Log, t.Fatal, t.Parallel, ...
 }
@@ -145,22 +152,64 @@ you. This is the escape hatch for anything the fluent API doesn't cover.
 
 ## Environments
 
-An environment captures everything that differs between where you run the tests -
-base URL, auth, and free-form variables:
+An environment captures everything that differs between where you run the tests:
+where and how to connect, and the test data that exists there. Each one is a
+folder:
+
+```
+environments/staging/
+├── env.yaml          # base URL, auth, headers
+└── data/             # static test data (optional)
+    └── users.yaml
+```
 
 ```yaml
-# environments/staging.yaml
+# environments/staging/env.yaml
 base_url: https://staging.acme.example
 auth:
   type: bearer
   token: ${ACME_STAGING_TOKEN}   # expanded from env var / secret at load time
-variables:
-  default_account: "42"
 ```
 
 You select one at run time (`pesto run --env staging`). The same test runs against
 any environment without modification. String values support `${VAR}` expansion so
-secrets stay out of the files. Full format: [reference/config.md](reference/config.md).
+secrets stay out of the files. An environment with no data can also be a single
+`environments/<name>.yaml`. Full format: [reference/config.md](reference/config.md).
+
+## Test data
+
+Pesto distinguishes two kinds of test data:
+
+- **Static** - predefined data that is permanent in the target's database: the
+  user every environment is seeded with, a tenant, a catalogue. Tests only read it.
+- **Dynamic** - data a test creates, updates or deletes while it runs. That is
+  what [fixtures](#fixtures-planned) are for.
+
+Static data differs between environments (user `42` in dev may be `9001` in
+staging), so it lives in the environment's `data/` folder. Each file is one
+entity, holding named records:
+
+```yaml
+# environments/staging/data/users.yaml
+default:
+  id: 9001
+  email: qa-default@acme.example
+  password: ${STAGING_DEFAULT_PASSWORD}
+```
+
+A test reads a value with `t.Data("<file>.<record>.<field>")`:
+
+```go
+func TestGetUser(t *pesto.T) {
+    id := t.Data("users.default.id")   // "9001" on staging
+    t.Client.GET("/users/" + id).Send().Expect().Status(200)
+}
+```
+
+A missing reference fails the test immediately, naming the environment's file and
+what is missing. Contract tests fill `{param}` path parameters and request
+body fields (`request.data`) the same way. Full
+format: [reference/config.md](reference/config.md#static-test-data).
 
 ## Fixtures (planned)
 

@@ -13,10 +13,11 @@ does not replace the test runner.
 
 ## Status
 
-Under active construction. **Implemented (Phases 1-3):** the runtime library
-(`pesto.T`, `Client`, `Expect`/`Decode`, config, auth) and the CLI (`pesto init`,
-`pesto run` with the transform + JUnit reports, `pesto generate e2e|suite|client`,
-`pesto version`). **Next:** Phase 4 contract-level tests, then fixtures. The source of truth for
+Under active construction. **Implemented (Phases 1-4):** the runtime library
+(`pesto.T`, `Client`, `Expect`/`Decode`, config, auth), REST contract tests (the
+`contract` package), and the CLI (`pesto init`, `pesto run` with the transform +
+JUnit reports, `pesto generate e2e|suite|client|contract`, `pesto version`).
+**Next:** OpenAPI seeding for contracts, then Phase 5 fixtures. The source of truth for
 progress is [docs/design/roadmap.md](docs/design/roadmap.md).
 
 ## Module & toolchain
@@ -26,16 +27,19 @@ progress is [docs/design/roadmap.md](docs/design/roadmap.md).
   `go test` ignores `-overlay` for the injected `pesto_generated_test.go` and
   fails every package. (Per-iteration loop variables, needed for parallel
   subtests, arrived in 1.22.)
-- Dependencies: only `gopkg.in/yaml.v3` (config parsing). Keep the dependency
-  footprint minimal - especially for the runtime library.
+- Dependencies: `gopkg.in/yaml.v3` (config parsing) for the root runtime, plus
+  `github.com/santhosh-tekuri/jsonschema/v6` (and its `golang.org/x/text`) used
+  **only** by the `contract` package - a project compiles it only when it has
+  contract tests. Never import the validator from the root package. Keep the
+  dependency footprint minimal - especially for the runtime library.
 
 ## Architecture: two halves, one module
 
 The single most important structural rule:
 
 - **The runtime library is the module root** (`pesto.go`, `client.go`,
-  `response.go`, `expect.go`, `auth.go`, `config.go`, `run.go`). It is a plain
-  importable library (`import "github.com/bulkashmak/pesto"`), **not** installable,
+  `response.go`, `expect.go`, `auth.go`, `config.go`, `data.go`, `run.go`). It is
+  a plain importable library (`import "github.com/bulkashmak/pesto"`), **not** installable,
   and imports nothing from `cmd/` or `internal/`. A test project that imports it
   must not pull in CLI code. Keep this root small and public.
 - **The CLI is `cmd/pesto`** (`package main`), installable via
@@ -56,6 +60,11 @@ the working directory from `s.Dir()`, never `os.Getwd`; return
 `commands.Usagef(...)` for bad invocations (exit 2) and
 `&commands.ExitError{Code: n}` to propagate a specific exit code.
 
+The **`contract` package** (`github.com/bulkashmak/pesto/contract`) is the one
+public package besides the root: the contract engine imported by generated
+contract tests. It depends on the root, never the other way round, and never on
+`internal/`.
+
 Dependency arrow points one way only: `cmd/pesto → root + internal/*`; the root
 depends on neither. Preserve this when adding code.
 
@@ -63,7 +72,8 @@ depends on neither. Preserve this when adding code.
 
 | Path | Role |
 | --- | --- |
-| `.` (`package pesto`) | runtime library: `T`, `New`, `Run`, `Client`, `Response`, `Expect`, `Decode`, `Config`/`Environment`, `Auth` |
+| `.` (`package pesto`) | runtime library: `T` (`Run`, `Data`), `New`, `Run`, `Client` (`Do`), `Response`, `Expect`, `Decode`, `Config`/`Environment`, `Auth` |
+| `contract` | public contract engine: `contract.Run` loads `contract.yaml` + JSON Schemas, derives happy-path and violation cases |
 | `cmd/pesto` | CLI entry point: wires `State` + registry, maps errors to exit codes |
 | `internal/cli` | `State` shared by every command handler (version, stdout/stderr) |
 | `internal/cli/commands` | command registry (`Register`/`Run`), `UsageError`, `ExitError` |
@@ -74,7 +84,7 @@ depends on neither. Preserve this when adding code.
 | `internal/runner` | builds the `go test -overlay` map and drives `go test` (incl. `--report`) |
 | `internal/report` | `go test -json` → JUnit XML |
 | `internal/scaffold` | `pesto init` project generator (templated layout) |
-| `internal/generate` | `pesto generate e2e|suite|client` file scaffolding (templates + name rules) |
+| `internal/generate` | `pesto generate e2e|suite|client|contract` file scaffolding (templates + name/path rules) |
 
 ## The transform (why `pesto run` is required)
 

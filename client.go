@@ -21,21 +21,23 @@ type Client struct {
 }
 
 // GET starts a GET request for path (resolved against the client's base URL).
-func (c *Client) GET(path string) *Request { return c.newRequest(http.MethodGet, path) }
+func (c *Client) GET(path string) *Request { return c.Do(http.MethodGet, path) }
 
 // POST starts a POST request for path.
-func (c *Client) POST(path string) *Request { return c.newRequest(http.MethodPost, path) }
+func (c *Client) POST(path string) *Request { return c.Do(http.MethodPost, path) }
 
 // PUT starts a PUT request for path.
-func (c *Client) PUT(path string) *Request { return c.newRequest(http.MethodPut, path) }
+func (c *Client) PUT(path string) *Request { return c.Do(http.MethodPut, path) }
 
 // PATCH starts a PATCH request for path.
-func (c *Client) PATCH(path string) *Request { return c.newRequest(http.MethodPatch, path) }
+func (c *Client) PATCH(path string) *Request { return c.Do(http.MethodPatch, path) }
 
 // DELETE starts a DELETE request for path.
-func (c *Client) DELETE(path string) *Request { return c.newRequest(http.MethodDelete, path) }
+func (c *Client) DELETE(path string) *Request { return c.Do(http.MethodDelete, path) }
 
-func (c *Client) newRequest(method, path string) *Request {
+// Do starts a request with any HTTP method for path, for code that picks the
+// method at run time; the verb methods are shorthands for it.
+func (c *Client) Do(method, path string) *Request {
 	r := &Request{
 		t:      c.t,
 		client: c,

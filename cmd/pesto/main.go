@@ -30,11 +30,13 @@ func main() {
 	})
 	cmds.Register(commands.Entry{
 		Name:        "generate",
-		Usage:       "generate <e2e|suite|client> <name> [--root <dir>]",
-		Description: "scaffold a test, suite, or client inside a project",
+		Usage:       "generate <e2e|suite|client> <name> | contract <METHOD> <path> [--root <dir>]",
+		Description: "scaffold a test, suite, client, or contract inside a project",
 		Details: `  pesto generate e2e <domain>/<name>   an E2E test, e.g. e2e transfer/happy_path
   pesto generate suite <domain>        an E2E domain folder with shared helpers
   pesto generate client <name>         a typed client stub under clients/
+  pesto generate contract <METHOD> <path>
+                                       a schema-driven contract, e.g. contract POST /users/{id}/cards
 `,
 		Handler: handlers.HandleGenerate,
 	})

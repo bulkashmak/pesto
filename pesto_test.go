@@ -88,3 +88,39 @@ func TestParallelPassthrough(t *testing.T) {
 		Status(200).
 		JSON("name").Equals("Bob")
 }
+
+// TestSubtestKeepsClientConfig checks that T.Run hands the subtest a client with
+// the parent's base URL, headers, and data.
+func TestSubtestKeepsClientConfig(t *testing.T) {
+	var gotHeader string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotHeader = r.Header.Get("X-Team")
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	t.Cleanup(srv.Close)
+
+	pt := pesto.New(t,
+		pesto.WithBaseURL(srv.URL),
+		pesto.WithHeader("X-Team", "qa"),
+		pesto.WithData(map[string]any{"users": map[string]any{"default": map[string]any{"id": 42}}}),
+	)
+
+	ran := pt.Run("child", func(st *pesto.T) {
+		if st.T == t {
+			t.Error("subtest T should wrap the subtest's *testing.T")
+		}
+		if v := st.Data("users.default.id"); v != "42" {
+			st.Errorf("Data(users.default.id) = %q, want 42", v)
+		}
+		st.Client.Do(http.MethodDelete, "/users/42").Send().Expect().Status(204)
+	})
+	if !ran {
+		t.Fatal("subtest failed")
+	}
+	if gotHeader != "qa" {
+		t.Errorf("X-Team header = %q, want qa", gotHeader)
+	}
+	if _, ok := pt.LookupData("users.missing.id"); ok {
+		t.Error("LookupData(users.missing.id) reported set")
+	}
+}

@@ -67,16 +67,23 @@ The first tagged release: Phases 1-3 installable with `go install ...@v0.1.0`.
 
 The first non-E2E level. See [design-test-levels.md](active/design-test-levels.md).
 
-- [ ] Minimal setup primitive: env-supplied auth + `variables` for referenced
-      resources, `t.Cleanup`-registered create helpers - full fixtures stay
-      Phase 5 (see [design-fixtures.md](active/design-fixtures.md))
-- [ ] JSON Schema (2020-12) bodies + thin Pesto HTTP envelope; OpenAPI 3.1 seeding
-- [ ] Contract engine: build happy-path request from the schema's
-      `const`/`examples`/`default` (no constraint-based value generation in v1),
-      validate response
-- [ ] Negative cases: derive one per field violation from the schema, assert error
-- [ ] `pesto generate contract <api-path>` (path/RPC → folder mapping)
-- [ ] Contract tests discovered and run by `pesto run` alongside E2E
+- [x] Minimal setup primitive: env-supplied auth + static test data for
+      referenced resources (`t.Data`, `path_params`) - full fixtures stay Phase 5 (see
+      [design-fixtures.md](active/design-fixtures.md))
+- [x] Static test data: `environments/<env>/data/*.yaml`, `t.Data`, data
+      references in `path_params` - replaces `variables` / `t.Var` (see
+      [design-fixtures.md](active/design-fixtures.md#decided-drafted-static-vs-dynamic-test-data))
+- [x] Request body fields from static data (`request.data` in `contract.yaml`) -
+      see [design-test-levels.md](active/design-test-levels.md#body-values-from-static-data-requestdata-decided-drafted)
+- [x] JSON Schema (2020-12) bodies + thin Pesto HTTP envelope (`contract.yaml`)
+- [ ] OpenAPI 3.1 seeding (`generate contract --from openapi.yaml`)
+- [x] Contract engine (`contract.Run`): build happy-path request from the schema's
+      `const`/`examples`/`default`/`enum` (no constraint-based value generation
+      in v1), validate response
+- [x] Negative cases: derive one per field violation from the schema, assert
+      `on_violation` status (`pattern`/`format`/array items not derived yet)
+- [x] `pesto generate contract <METHOD> <path>` (REST path → folder mapping)
+- [x] Contract tests discovered and run by `pesto run` alongside E2E
 
 **Done when:** a schema under `tests/contract/users/post/` produces passing
 happy-path + violation checks via `pesto run`.
@@ -100,6 +107,7 @@ happy-path + violation checks via `pesto run`.
 ## Later / maybe
 
 - Additional test levels (integration, smoke)
+- RPC contract tests (dropped from Phase 4 until a concrete RPC target exists)
 - gRPC and GraphQL clients (see [design-protocols.md](active/design-protocols.md)) -
   enables RPC contract tests
 - Typed client generation from OpenAPI specs

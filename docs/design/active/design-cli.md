@@ -10,6 +10,11 @@ carries the "Django-like codegen" and "Vue-like structure" goals.
 
 > **Implemented (Phase 2):** `pesto init`, `pesto run` (with `--env`/`--report`/
 > `--out`/`--keep` and `go test` passthrough), and `pesto version`.
+
+> **Implemented (Phase 4):** `pesto generate contract <METHOD> <path>` -
+> arguments only, no prompts; writes a contract bundle under
+> `tests/contract/<path folders>/<method>/`. Rationale and the folder mapping
+> are in [design-test-levels.md](design-test-levels.md#phase-4-decisions).
 > **Implemented (Phase 3):** `pesto generate e2e|suite|client` per the decided
 > rules below (`internal/generate`). See [reference/cli.md](../../reference/cli.md)
 > for the shipped surface. `pesto generate contract` comes with Phase 4.
@@ -35,7 +40,7 @@ carries the "Django-like codegen" and "Vue-like structure" goals.
 
 ```
 pesto init <name>                       # scaffold a new test project
-pesto generate contract <api-path>      # e.g. pesto generate contract users/post
+pesto generate contract <METHOD> <path> # e.g. pesto generate contract POST /users/{id}/cards
 pesto generate e2e <domain>/<name>      # e.g. pesto generate e2e transfer/happy_path
 pesto generate suite <domain>           # e2e feature/domain folder + shared setup
 pesto generate client <name>
@@ -106,12 +111,13 @@ Decided (implemented in Phase 3):
   usage demands them.
 - Like `init`, generate **refuses to overwrite existing files**.
 
-Still open (deferred to Phase 4, with the contract engine):
+Decided in Phase 4: contract folders map each `{param}` to `by_<param>` and
+put the method last (`POST /users/{id}/cards` → `users/by_id/cards/post/`); see
+[design-test-levels.md](design-test-levels.md#phase-4-decisions).
 
-- Contract path → folder mapping beyond the shared normalization rule: path params
-  map as `GET /users/{id}` → `users/get_by_id/`; confirm the multi-param form and
-  the RPC casing rule when the engine lands (see
-  [design-test-levels.md](design-test-levels.md)).
+Still open:
+
+- The RPC casing rule, with RPC contracts.
 - **Seed contract from OpenAPI** (`--from openapi.yaml`): envelope + schemas from
   an OpenAPI 3.1 operation vs. an empty schema to fill in.
 

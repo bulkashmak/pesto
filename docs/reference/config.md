@@ -1,8 +1,8 @@
 # Configuration reference
 
-Pesto reads two kinds of files from the project root: `pesto.yaml` (project
-settings) and `environments/<name>.yaml` (per-environment settings). This reflects
-what is implemented today.
+Pesto reads `pesto.yaml` (project settings) from the project root, and the
+selected environment from `environments/<name>/` (connection settings plus static
+test data). This reflects what is implemented today.
 
 ## `pesto.yaml`
 
@@ -10,20 +10,37 @@ what is implemented today.
 # The environment used by `pesto run` when --env is not given.
 default_env: dev
 
-# Directory holding environment files, relative to the root. Optional.
+# Directory holding environments, relative to the root. Optional.
 environments_dir: environments
 ```
 
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `default_env` | (none) | environment selected when `--env` is absent |
-| `environments_dir` | `environments` | where environment files live |
+| `environments_dir` | `environments` | where environments live |
 
 `pesto.yaml` is optional: a project can rely on `--env` plus environment files
 alone. If neither `--env` nor `default_env` selects an environment, `pesto run`
 runs with no environment (tests must then configure their client explicitly).
 
-## `environments/<name>.yaml`
+## Environments
+
+An environment is a folder:
+
+```
+environments/
+└── staging/
+    ├── env.yaml        # where and how to connect
+    └── data/           # static test data - optional
+        ├── users.yaml
+        └── cards.yaml
+```
+
+An environment with no data may instead be a single file,
+`environments/<name>.yaml`, with the same keys as `env.yaml`. Defining an
+environment both ways is an error.
+
+### `env.yaml`
 
 ```yaml
 # base_url is where t.Client sends requests; test paths are relative to it.
@@ -35,9 +52,6 @@ auth:
 
 headers:
   X-Team: qa
-
-variables:
-  default_account: "42"
 ```
 
 | Key | Meaning |
@@ -45,7 +59,6 @@ variables:
 | `base_url` | base URL prepended to request paths |
 | `auth` | authentication applied to every request (see below) |
 | `headers` | default headers sent on every request |
-| `variables` | free-form string values a test can reference |
 
 ### Authentication
 
@@ -73,6 +86,46 @@ passwords) out of the files and inject them via the environment:
 ACME_TOKEN=$(vault read ...) pesto run --env staging
 ```
 
+## Static test data
+
+Static test data is predefined data that is permanent in the environment's
+database - tests only read it. Each `data/<file>.yaml` is one entity; its
+top-level keys are named records, and each record is a map of fields:
+
+```yaml
+# environments/staging/data/users.yaml
+default:
+  id: 9001
+  email: qa-default@acme.example
+  password: ${STAGING_DEFAULT_PASSWORD}
+  address:
+    city: Kazan
+blocked:
+  id: 9002
+```
+
+- Values are scalars (strings, numbers, booleans) or nested maps of fields.
+  Lists are not supported.
+- Values support the same `${VAR}` expansion as `env.yaml`.
+- File, record and field names cannot contain a dot. Only `.yaml` files are read.
+
+A **reference** names one value: `<file>.<record>.<field>[.<nested>...]`.
+
+| Reference | Value |
+| --- | --- |
+| `users.default.id` | `9001` |
+| `users.default.address.city` | `Kazan` |
+
+Read it in a test with `t.Data(ref)`, which returns the value as a string in its
+YAML form (`"9001"`). A missing reference fails the test immediately:
+
+```
+pesto: data users.default.id: no record "default" in environments/staging/data/users.yaml
+```
+
+`t.LookupData(ref)` returns `(value, ok)` instead, for optional data. Contract
+tests use references in [`path_params`](contract.md#contractyaml).
+
 ## Using config without the CLI
 
 The runtime library is usable from a plain `func TestX(t *testing.T)` (the escape
@@ -87,6 +140,9 @@ pt := pesto.New(t,
 	pesto.WithBaseURL("http://localhost:8080"),
 	pesto.WithAuth(pesto.BearerAuth("token")),
 	pesto.WithHeader("X-Team", "qa"),
+	pesto.WithData(map[string]any{
+		"users": map[string]any{"default": map[string]any{"id": 42}},
+	}),
 )
 ```
 

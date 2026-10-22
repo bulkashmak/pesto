@@ -11,7 +11,8 @@
 > `pesto run` are built and transform `*pesto.T` tests end to end.
 >
 > **Shipped.** The remaining `pesto.T` accessors are tracked elsewhere: `t.Env`
-> (environment `variables`) with the Phase 4 setup primitive and `t.Fixtures` in
+> (environment `variables`; shipped instead as `t.Data`, static test data) with
+> the Phase 4 setup primitive and `t.Fixtures` in
 > Phase 5 - both in [design-fixtures.md](../active/design-fixtures.md).
 
 ## Decision

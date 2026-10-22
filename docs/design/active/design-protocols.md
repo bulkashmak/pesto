@@ -13,6 +13,11 @@ The `Client` and `Expect` APIs are designed around HTTP requests and JSON
 responses first. This covers the common case for most backend teams and is the
 only protocol in the initial scope.
 
+Contract tests (Phase 4) are REST-only for the same reason: RPC contracts were
+dropped from v1 because "RPC" was not concrete - JSON-RPC, an in-house HTTP RPC,
+and gRPC each need a different envelope and error convention. They wait for a
+concrete target (and, for gRPC, a client).
+
 ## Candidates for later
 
 ### gRPC
