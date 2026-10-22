@@ -3,7 +3,7 @@
 All notable changes to Pesto. The CLI (`cmd/pesto`) and the runtime library
 (`github.com/bulkashmak/pesto`) are released together under one version.
 
-## v0.2.0 - unreleased
+## v0.2.0 - 2026-10-22
 
 REST contract tests: describe an endpoint with JSON Schema and let Pesto derive
 the valid request and one negative case per schema violation. Static test data:

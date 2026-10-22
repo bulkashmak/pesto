@@ -94,8 +94,9 @@ REST contract tests and static test data, installable with
 `go install ...@v0.2.0`. OpenAPI seeding is not in it.
 
 - [x] `CHANGELOG.md` entry
-- [ ] Tag `v0.2.0` and verify a clean install: `go install`, `init`, `run`,
-      `generate contract` with no local `replace`
+- [x] Tag `v0.2.0` and verify a clean install: `go install`, `init`, `run`,
+      `generate contract` with no local `replace` (verified from
+      proxy.golang.org on 2026-10-22)
 
 ## Phase 5 - Fixtures & data
 
